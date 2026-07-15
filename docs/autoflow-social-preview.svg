@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#080b14"/>
+      <stop offset="0.55" stop-color="#11172a"/>
+      <stop offset="1" stop-color="#0a1020"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8c6cff"/>
+      <stop offset="1" stop-color="#3f7cff"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#765cff" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#765cff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <circle cx="1050" cy="80" r="380" fill="url(#glow)"/>
+  <circle cx="120" cy="620" r="330" fill="url(#glow)" opacity="0.45"/>
+  <path d="M0 520 C280 430 420 650 720 530 S1050 430 1280 500" fill="none" stroke="#7863ee" stroke-opacity="0.12" stroke-width="2"/>
+  <g transform="translate(92 88)" filter="url(#shadow)">
+    <rect width="86" height="86" rx="25" fill="url(#accent)"/>
+    <circle cx="31" cy="30" r="8" fill="none" stroke="#fff" stroke-width="4"/>
+    <circle cx="56" cy="24" r="7" fill="none" stroke="#fff" stroke-width="4"/>
+    <circle cx="58" cy="57" r="8" fill="none" stroke="#fff" stroke-width="4"/>
+    <circle cx="29" cy="59" r="7" fill="none" stroke="#fff" stroke-width="4"/>
+    <path d="M38 29 L49 26 M57 33 L58 48 M50 57 L37 59 M29 50 L31 38 M37 35 L51 50" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <text x="205" y="126" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700">AutoFlow AI</text>
+  <text x="205" y="158" fill="#8f9bb1" font-family="Arial, Helvetica, sans-serif" font-size="16" letter-spacing="3">INTELLIGENT DOCUMENT OPERATIONS</text>
+  <text x="92" y="292" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="67" font-weight="800">Documents that think.</text>
+  <text x="92" y="370" fill="#a99aff" font-family="Arial, Helvetica, sans-serif" font-size="67" font-weight="800">Workflows that act.</text>
+  <text x="96" y="426" fill="#9aa6ba" font-family="Arial, Helvetica, sans-serif" font-size="22">AI classification · Human approvals · Evidence-grounded intelligence</text>
+  <g transform="translate(94 490)">
+    <rect width="206" height="48" rx="24" fill="#171e31" stroke="#7863ee" stroke-opacity="0.55"/>
+    <circle cx="26" cy="24" r="6" fill="#39d5aa"/>
+    <text x="44" y="30" fill="#d8deea" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="600">MERN + Groq AI</text>
+    <rect x="220" width="216" height="48" rx="24" fill="#171e31" stroke="#7863ee" stroke-opacity="0.55"/>
+    <text x="245" y="30" fill="#d8deea" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="600">Secure &amp; Auditable</text>
+    <rect x="450" width="248" height="48" rx="24" fill="#171e31" stroke="#7863ee" stroke-opacity="0.55"/>
+    <text x="475" y="30" fill="#d8deea" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="600">Evidence Studio</text>
+  </g>
+  <g transform="translate(916 218)" opacity="0.9">
+    <rect width="252" height="300" rx="24" fill="#111827" stroke="#2b354c"/>
+    <rect x="24" y="25" width="204" height="38" rx="10" fill="#1b2335"/>
+    <rect x="24" y="84" width="92" height="78" rx="14" fill="#191f35" stroke="#493e89"/>
+    <rect x="136" y="84" width="92" height="78" rx="14" fill="#152636" stroke="#245b65"/>
+    <rect x="24" y="183" width="204" height="15" rx="7" fill="#242d42"/>
+    <rect x="24" y="214" width="166" height="15" rx="7" fill="#242d42"/>
+    <rect x="24" y="245" width="187" height="15" rx="7" fill="#242d42"/>
+    <rect x="37" y="108" width="46" height="8" rx="4" fill="#826cff"/>
+    <rect x="37" y="128" width="63" height="12" rx="4" fill="#f0f2f8"/>
+    <circle cx="182" cy="123" r="23" fill="none" stroke="#38d1aa" stroke-width="8"/>
+  </g>
+</svg>
