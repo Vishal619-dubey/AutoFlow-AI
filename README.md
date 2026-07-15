@@ -111,15 +111,15 @@ flowchart LR
 
 ### Automation Command Center
 
-![AutoFlow AI dashboard](docs/screenshots/dashboard.png)
+![AutoFlow AI dashboard](docs/screenshots/dashboard-latest.png)
 
 ### Intelligent Document Hub
 
-![AutoFlow AI document hub](docs/screenshots/document-hub.png)
+![AutoFlow AI document hub](docs/screenshots/document-hub-latest.png)
 
 ### Grounded AI Copilot
 
-![AutoFlow AI Copilot](docs/screenshots/ai-copilot.png)
+![AutoFlow AI Copilot](docs/screenshots/ai-copilot-latest.png)
 
 ## Technology Stack
 
