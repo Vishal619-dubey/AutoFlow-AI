@@ -7,7 +7,15 @@
 <p align="center">
   <strong>AI-powered document workflow automation with evidence-grounded intelligence, human approvals and privacy-aware processing.</strong>
 </p>
-
+<p align="center">
+  <a href="https://autoflow-ai-vishal.netlify.app">
+    <strong>🚀 Open Live Demo</strong>
+  </a>
+  &nbsp;•&nbsp;
+  <a href="https://autoflow-ai-api.onrender.com">API Status</a>
+  &nbsp;•&nbsp;
+  <a href="https://github.com/Vishal619-dubey/AutoFlow-AI">Source Code</a>
+</p>
 <p align="center">
   <img alt="React" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" />
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-Express-339933?logo=node.js&logoColor=white" />
