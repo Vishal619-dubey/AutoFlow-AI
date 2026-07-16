@@ -21,32 +21,36 @@ connectDB();
 
 const app = express();
 
-// Allowed frontend URLs
+// Frontend URLs allowed to access this API
 const allowedOrigins = [
   "http://localhost:5173",
   "https://jade-klepon-08bba1.netlify.app",
   "https://autoflow-ai-vishal.netlify.app",
   process.env.CLIENT_URL,
 ].filter(Boolean);
-// Middleware
+
+// CORS middleware
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow tools like Postman and server-to-server requests
+      // Allow Postman, server-to-server requests and approved frontends
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(new Error("Not allowed by CORS"));
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
+// Request body middleware
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/documents", documentRoutes);
@@ -62,11 +66,11 @@ app.use("/api/notifications", notificationRoutes);
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "AutoFlow AI Automation API Running 🚀",
+    message: "AutoFlow AI Automation API Running",
   });
 });
 
-// Unknown API route
+// Unknown route
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -88,5 +92,5 @@ app.use((error, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
