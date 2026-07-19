@@ -217,7 +217,7 @@ AutoFlow-AI/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Vishal619-dubey/DocMind-AI.git
+git clone https://github.com/Vishal619-dubey/AutoFlow-AI.git
 cd DocMind-AI
 ```
 
