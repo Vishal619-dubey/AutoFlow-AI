@@ -11,6 +11,8 @@ const { runAutomationRules } = require("../services/automationRuleEngine");
 const { scanSensitiveData } = require("../services/sensitiveDataScanner");
 const { extractPageAwarePdf } = require("../services/pdfEvidenceService");
 const { createNotification } = require("../services/notificationService");
+const { encryptFile, detectPromptInjection, calculateTrustScore } = require("../services/documentSecurityService");
+const { recordSecurityEvent } = require("../services/securityEventService");
 
 const router = express.Router();
 
@@ -151,10 +153,20 @@ router.post("/", protect, (req, res) => {
       });
 
       const sensitiveData = scanSensitiveData(extractedContent);
+      const promptInjection = detectPromptInjection(extractedContent);
+      const encrypted = encryptFile(req.file.path);
+      req.encryptedUploadPath = encrypted.encryptedPath;
+      const trust = calculateTrustScore({
+        integrityStatus: "verified",
+        encrypted: true,
+        ownerBound: true,
+        injectionDetected: promptInjection.detected,
+        sensitiveRisk: sensitiveData.riskLevel,
+      });
 
       const document = await Document.create({
         filename: req.file.originalname,
-        filepath: req.file.path,
+        filepath: encrypted.encryptedPath,
         filesize: req.file.size,
         mimeType: req.file.mimetype,
         fileType,
@@ -166,7 +178,22 @@ router.post("/", protect, (req, res) => {
         uploadedBy: req.user._id,
         ...automation,
         sensitiveData,
+        security: {
+          encryption: "AES-256-GCM",
+          encryptedAt: new Date(),
+          plaintextHash: encrypted.plaintextHash,
+          encryptedHash: encrypted.encryptedHash,
+          iv: encrypted.iv,
+          integrityStatus: "verified",
+          lastVerifiedAt: new Date(),
+          promptInjection,
+          trustScore: trust.score,
+          trustGrade: trust.grade,
+          trustDimensions: trust.dimensions,
+        },
       });
+
+      await recordSecurityEvent({ req, user: req.user._id, document: document._id, type: "secure-upload", outcome: promptInjection.detected ? "warning" : "allowed", severity: promptInjection.detected ? "high" : "info", message: promptInjection.detected ? "Encrypted upload quarantined for prompt-injection review" : "Document encrypted and integrity fingerprint recorded", metadata: { trustScore: trust.score } });
 
       await addActivity("Uploaded Document", document.filename, "upload", "indigo", req.user._id);
 
@@ -223,7 +250,9 @@ router.post("/", protect, (req, res) => {
     } catch (error) {
       console.error("Upload Error:", error);
 
-      if (req.file?.path && fs.existsSync(req.file.path)) {
+      if (req.encryptedUploadPath && fs.existsSync(req.encryptedUploadPath)) {
+        fs.unlinkSync(req.encryptedUploadPath);
+      } else if (req.file?.path && fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
       }
 

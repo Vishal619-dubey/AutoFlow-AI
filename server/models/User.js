@@ -33,6 +33,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    failedLoginAttempts: { type: Number, default: 0 },
+    lockUntil: { type: Date, default: null },
+    tokenVersion: { type: Number, default: 0 },
+    lastLoginAt: { type: Date, default: null },
+    lastLoginIpHash: { type: String, default: "" },
   },
   {
     timestamps: true,

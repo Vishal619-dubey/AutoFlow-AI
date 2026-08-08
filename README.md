@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>AI-powered document workflow automation with evidence-grounded intelligence, human approvals and privacy-aware processing.</strong>
+  <strong>AI-powered document workflow automation with zero-trust access, encrypted storage, tamper evidence and grounded intelligence.</strong>
 </p>
 <p align="center">
   <a href="https://autoflow-ai-vishal.netlify.app">
@@ -50,6 +50,8 @@ flowchart LR
 - PDF answers are grounded in uploaded document content.
 - Sensitive identifiers are masked before being shown in security results.
 - Every user can access only their own documents and workflow data.
+- Uploaded files are encrypted at rest with AES-256-GCM and decrypted only after authorization and integrity checks.
+- SHA-256 fingerprints, prompt-injection screening and an explainable Document Trust Score protect the AI retrieval path.
 
 ## Key Features
 
@@ -100,6 +102,16 @@ flowchart LR
 - Calculates document-level privacy risk score and severity.
 - Provides automatic scanning for new PDF/TXT uploads and manual rescanning.
 
+### AutoFlow Trust Center
+
+- AES-256-GCM authenticated encryption for newly uploaded files.
+- SHA-256 plaintext and encrypted-payload fingerprints with on-demand verification.
+- Owner-scoped zero-trust policy enforcement before view, download and AI retrieval.
+- Prompt-injection screening for uploaded text and user questions.
+- Explainable 100-point Document Trust Score across integrity, confidentiality, authentication and content safety.
+- Security event trail for login, upload, verification, blocked retrieval and logout decisions.
+- Login lockout, two-hour signed sessions, server-side session revocation and API rate limiting.
+
 ### Executive Report Generator
 
 - One-click A4 executive intelligence report.
@@ -139,8 +151,8 @@ flowchart LR
 | Document Processing | `pdf-parse`, local text analysis and evidence extraction |
 | Automation | Custom trigger–condition–action rule engine |
 | Optional AI | Groq SDK with Llama for grounded Q&A and language-to-workflow parsing |
-| Security | JWT authentication, ownership filtering, file validation and masked PII results |
-| Storage | Local server file storage with MongoDB metadata |
+| Security | AES-256-GCM, SHA-256, secure JWT, ownership policy, login lockout, rate limiting, injection screening and masked PII results |
+| Storage | Encrypted local file storage with MongoDB security metadata |
 
 ## System Architecture
 
@@ -157,7 +169,7 @@ flowchart TB
         AUTH[JWT Middleware]
         DOC[Document Services]
         RULE[Automation Engine]
-        SEC[Privacy Scanner]
+        SEC[Trust & Integrity Engine]
         NOTIFY[Notification Service]
     end
 
@@ -205,6 +217,8 @@ AutoFlow-AI/
 └── README.md
 ```
 
+The research controls, score definition, proposed experiments and limitations are documented in [`docs/SECURITY_RESEARCH_FRAMEWORK.md`](docs/SECURITY_RESEARCH_FRAMEWORK.md).
+
 ## Local Installation
 
 ### Prerequisites
@@ -218,10 +232,18 @@ AutoFlow-AI/
 
 ```bash
 git clone https://github.com/Vishal619-dubey/AutoFlow-AI.git
-cd DocMind-AI
+cd AutoFlow-AI
 ```
 
 ### 2. Configure and run the backend
+
+Generate the document master key once and keep it private:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Paste that 64-character value into `DOCUMENT_MASTER_KEY` in `server/.env`. Changing this key later without a migration makes existing encrypted files unreadable.
 
 Windows PowerShell:
 

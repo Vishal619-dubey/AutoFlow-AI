@@ -144,7 +144,8 @@ export default function AutoFlowShell() {
     };
   }, []);
 
-  const logout = () => {
+  const logout = async () => {
+    await API.post("/auth/logout").catch(() => {});
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login");

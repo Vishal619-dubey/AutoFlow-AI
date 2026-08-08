@@ -206,9 +206,10 @@ export function AuditPage() {
 }
 
 export function SecurityPage() {
-  const [data, setData] = useState({ metrics: {}, documents: [] });
+  const [data, setData] = useState({ metrics: {}, documents: [], recentEvents: [] });
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState("");
+  const [verifying, setVerifying] = useState("");
 
   const load = async () => {
     try {
@@ -239,21 +240,35 @@ export function SecurityPage() {
     }
   };
 
+  const verify = async (doc) => {
+    try {
+      setVerifying(doc._id);
+      const endpoint = doc.security?.encryption === "AES-256-GCM" ? "verify" : "protect";
+      const { data: result } = await API.post(`/security/${endpoint}/${doc._id}`);
+      toast.success(`${endpoint === "protect" ? "Encrypted and verified" : "Integrity verified"} · Trust ${result.trust.score}/100`);
+      await load();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Integrity verification failed");
+      await load();
+    } finally { setVerifying(""); }
+  };
+
   const metrics = data.metrics || {};
   return <>
-    <PageHeader eyebrow="PRIVACY & COMPLIANCE" title="Sensitive Data Scanner" description="Detect and mask exposed Aadhaar, PAN, payment card, phone and email data before documents enter a workflow." action={<button type="button" className="flow-ghost" onClick={load}><RefreshCw size={16} /> Refresh</button>} />
+    <PageHeader eyebrow="ZERO-TRUST DOCUMENT SECURITY" title="AutoFlow Trust Center" description="Confidentiality, authentication and integrity controls for every document and AI retrieval." action={<button type="button" className="flow-ghost" onClick={load}><RefreshCw size={16} /> Refresh</button>} />
     <section className="flow-metrics">
-      <MetricCard icon={ShieldCheck} label="Documents scanned" value={loading ? "—" : metrics.scanned || 0} detail="Privacy checks completed" tone="blue" />
-      <MetricCard icon={ShieldAlert} label="Risky documents" value={loading ? "—" : metrics.riskyDocuments || 0} detail="Sensitive information detected" tone="amber" />
-      <MetricCard icon={CircleAlert} label="Critical risk" value={loading ? "—" : metrics.criticalDocuments || 0} detail="Immediate review recommended" tone="violet" />
-      <MetricCard icon={Search} label="PII findings" value={loading ? "—" : metrics.totalFindings || 0} detail="Masked privacy matches" tone="green" />
+      <MetricCard icon={ShieldCheck} label="Encrypted" value={loading ? "—" : metrics.encryptedDocuments || 0} detail="AES-256-GCM at rest" tone="blue" />
+      <MetricCard icon={ShieldCheck} label="Integrity verified" value={loading ? "—" : metrics.verifiedDocuments || 0} detail="SHA-256 fingerprints" tone="green" />
+      <MetricCard icon={ShieldAlert} label="Restricted" value={loading ? "—" : metrics.restrictedDocuments || 0} detail="Trust policy blocked" tone="amber" />
+      <MetricCard icon={Search} label="PII findings" value={loading ? "—" : metrics.totalFindings || 0} detail="Masked privacy matches" tone="violet" />
     </section>
-    <section className="flow-security-note"><ShieldCheck /><div><b>Privacy-first scanning</b><span>Only masked samples appear here. Raw sensitive values are never returned by the scanner API.</span></div></section>
-    <div className="flow-card"><div className="flow-card-head"><div><h2>Document risk register</h2><p>Automatic results for new PDFs and text files; scan older documents on demand.</p></div></div>
-      <div className="flow-table-wrap"><table className="flow-table flow-security-table"><thead><tr><th>Document</th><th>Risk level</th><th>Risk score</th><th>Detected data</th><th>Last scan</th><th /></tr></thead><tbody>{data.documents.map((doc) => {
+    <section className="flow-security-note"><ShieldCheck /><div><b>Explainable Document Trust Engine</b><span>Access policy never depends on AI alone. Ownership is enforced first, then encryption, integrity and content-safety evidence build the trust score.</span></div></section>
+    <div className="flow-card"><div className="flow-card-head"><div><h2>Document trust register</h2><p>Verify cryptographic integrity and review privacy or prompt-injection risk.</p></div></div>
+      <div className="flow-table-wrap"><table className="flow-table flow-security-table"><thead><tr><th>Document</th><th>Encryption</th><th>Integrity</th><th>Trust score</th><th>Privacy risk</th><th>Actions</th></tr></thead><tbody>{data.documents.map((doc) => {
         const result = doc.sensitiveData || {};
         const scanned = Boolean(result.scannedAt);
-        return <tr key={doc._id}><td><div className="flow-doc-name"><span><FileText /></span><div><b>{doc.filename}</b><small>{doc.classification || "General"} · {doc.fileType?.toUpperCase()}</small></div></div></td><td>{scanned ? badge(result.riskLevel || "safe") : badge("Not scanned")}</td><td><div className="flow-risk-score"><i style={{ width: `${result.riskScore || 0}%` }} /><span>{scanned ? `${result.riskScore || 0}/100` : "—"}</span></div></td><td><div className="flow-findings">{result.findings?.length ? result.findings.map((finding) => <span key={finding.type}>{finding.type} <b>{finding.count}</b></span>) : <small>{scanned ? "No sensitive data" : "Scan required"}</small>}</div></td><td>{scanned ? new Date(result.scannedAt).toLocaleString() : "Never"}</td><td><button type="button" className="flow-icon-btn" title="Scan document" onClick={() => scan(doc._id)} disabled={scanning === doc._id}><RefreshCw className={scanning === doc._id ? "flow-spin" : ""} /></button></td></tr>;
+        const security = doc.security || {};
+        return <tr key={doc._id}><td><div className="flow-doc-name"><span><FileText /></span><div><b>{doc.filename}</b><small>{doc.classification || "General"} · {doc.fileType?.toUpperCase()}</small></div></div></td><td>{badge(security.encryption || "Legacy")}</td><td>{badge(security.integrityStatus || "pending")}</td><td><div className="flow-risk-score"><i style={{ width: `${security.trustScore || 0}%` }} /><span>{security.trustScore || 0}/100 · {security.trustGrade || "restricted"}</span></div></td><td>{scanned ? badge(result.riskLevel || "safe") : badge("Not scanned")}</td><td><div style={{display:"flex",gap:8}}><button type="button" className="flow-icon-btn" title={security.encryption === "AES-256-GCM" ? "Verify integrity" : "Encrypt and protect legacy file"} onClick={() => verify(doc)} disabled={verifying === doc._id}><ShieldCheck className={verifying === doc._id ? "flow-spin" : ""} /></button><button type="button" className="flow-icon-btn" title="Scan sensitive data" onClick={() => scan(doc._id)} disabled={scanning === doc._id}><RefreshCw className={scanning === doc._id ? "flow-spin" : ""} /></button></div></td></tr>;
       })}</tbody></table></div>
       {!loading && data.documents.length === 0 && <div className="flow-empty"><ShieldCheck /><h3>No documents to scan</h3><p>Upload a PDF or text file to run the first privacy check.</p></div>}
     </div>

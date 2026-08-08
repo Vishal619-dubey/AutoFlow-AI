@@ -15,6 +15,7 @@ const activityRoutes = require("./routes/activityRoutes");
 const automationRoutes = require("./routes/automationRoutes");
 const securityRoutes = require("./routes/securityRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const { rateLimit } = require("./middleware/rateLimitMiddleware");
 
 // Connect MongoDB
 connectDB();
@@ -49,6 +50,9 @@ app.use(
 // Request body middleware
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/api", rateLimit({ windowMs: 60_000, max: 180 }));
+app.use("/api/auth", rateLimit({ windowMs: 15 * 60_000, max: 30, message: "Too many authentication attempts. Try again later." }));
 
 // API routes
 app.use("/api/auth", authRoutes);

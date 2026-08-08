@@ -18,7 +18,11 @@ const protect = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      issuer: "autoflow-ai",
+      audience: "autoflow-workspace",
+      algorithms: ["HS256"],
+    });
 
     const user = await User.findById(decoded.id).select("-password");
 
@@ -27,6 +31,10 @@ const protect = async (req, res, next) => {
         success: false,
         message: "User not found.",
       });
+    }
+
+    if ((decoded.tokenVersion || 0) !== (user.tokenVersion || 0)) {
+      return res.status(401).json({ success: false, message: "Session has been revoked." });
     }
 
     req.user = user;

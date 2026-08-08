@@ -1,6 +1,8 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const { recordSecurityEvent } = require("../services/securityEventService");
 
 const publicUser = (user) => ({
   id: user._id,
@@ -9,6 +11,12 @@ const publicUser = (user) => ({
   role: user.role || "AI Automation Engineer",
   avatar: user.avatar || "",
 });
+
+const signToken = (user) => jwt.sign(
+  { id: user._id, tokenVersion: user.tokenVersion || 0 },
+  process.env.JWT_SECRET,
+  { expiresIn: "2h", issuer: "autoflow-ai", audience: "autoflow-workspace", algorithm: "HS256" }
+);
 
 // ================= REGISTER =================
 const registerUser = async (req, res) => {
@@ -76,32 +84,39 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
+      await recordSecurityEvent({ req, type: "login", outcome: "blocked", severity: "medium", message: "Login attempted for an unknown account" });
       return res.status(400).json({
         success: false,
         message: "User not found",
       });
     }
 
+    if (user.lockUntil && user.lockUntil > new Date()) {
+      await recordSecurityEvent({ req, user: user._id, type: "login", outcome: "blocked", severity: "high", message: "Login blocked because the account is temporarily locked" });
+      return res.status(423).json({ success: false, message: "Account temporarily locked after repeated failed attempts. Try again later." });
+    }
+
     // Compare Password
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+      if (user.failedLoginAttempts >= 5) user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+      await user.save();
+      await recordSecurityEvent({ req, user: user._id, type: "login", outcome: "blocked", severity: user.lockUntil ? "high" : "medium", message: "Invalid password rejected", metadata: { failedAttempts: user.failedLoginAttempts } });
       return res.status(400).json({
         success: false,
         message: "Invalid Password",
       });
     }
 
-    // Generate JWT Token
-    const token = jwt.sign(
-      {
-        id: user._id,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    );
+    user.failedLoginAttempts = 0;
+    user.lockUntil = null;
+    user.lastLoginAt = new Date();
+    user.lastLoginIpHash = crypto.createHash("sha256").update(req.ip || "unknown").digest("hex").slice(0, 16);
+    await user.save();
+    const token = signToken(user);
+    await recordSecurityEvent({ req, user: user._id, type: "login", outcome: "allowed", severity: "info", message: "Authenticated session created" });
 
     res.status(200).json({
       success: true,
@@ -118,6 +133,17 @@ const loginUser = async (req, res) => {
       message: "Server Error",
     });
   }
+};
+
+const logoutUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
+    await user.save();
+    await recordSecurityEvent({ req, user: user._id, type: "logout", outcome: "allowed", message: "All active sessions were revoked" });
+    return res.json({ success: true, message: "Signed out securely" });
+  } catch (error) { return res.status(500).json({ success: false, message: error.message }); }
 };
 
 const getProfile = async (req, res) => {
@@ -174,4 +200,5 @@ module.exports = {
   loginUser,
   getProfile,
   updateProfile,
+  logoutUser,
 };

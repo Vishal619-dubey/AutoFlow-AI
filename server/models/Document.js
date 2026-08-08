@@ -139,6 +139,23 @@ const documentSchema = new mongoose.Schema(
       }),
     },
 
+    security: {
+      type: Object,
+      default: () => ({
+        encryption: "none",
+        encryptedAt: null,
+        plaintextHash: "",
+        encryptedHash: "",
+        iv: "",
+        integrityStatus: "pending",
+        lastVerifiedAt: null,
+        promptInjection: { detected: false, matchCount: 0, rules: [] },
+        trustScore: 0,
+        trustGrade: "restricted",
+        trustDimensions: {},
+      }),
+    },
+
     /* ==========================
        Media Information
     ========================== */

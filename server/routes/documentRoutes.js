@@ -1,10 +1,11 @@
 const express = require("express");
 const fs = require("fs");
-const path = require("path");
 const Document = require("../models/Document");
 const { protect } = require("../middleware/authMiddleware");
 const { addActivity } = require("../controllers/activityController");
 const { getEvidenceProfile } = require("../controllers/evidenceController");
+const { decryptFile, verifyDocumentIntegrity } = require("../services/documentSecurityService");
+const { recordSecurityEvent } = require("../services/securityEventService");
 
 const router = express.Router();
 router.use(protect);
@@ -23,7 +24,9 @@ router.get("/", async (req, res) => {
       { tags: { $regex: search.trim(), $options: "i" } },
       { content: { $regex: search.trim(), $options: "i" } },
     ];
-    return res.json(await Document.find(query).sort({ createdAt: -1 }));
+    return res.json(await Document.find(query)
+      .select("-content -filepath -security.plaintextHash -security.encryptedHash -security.iv")
+      .sort({ createdAt: -1 }));
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -36,11 +39,18 @@ router.get("/view/:id", async (req, res) => {
     const document = await Document.findOne(owned(req, { deleted: false }));
     if (!document) return res.status(404).json({ success: false, message: "Document not found" });
     if (!document.filepath || !fs.existsSync(document.filepath)) return res.status(404).json({ success: false, message: "Document file is unavailable" });
+    const verification = verifyDocumentIntegrity(document);
+    if (!verification.valid) {
+      document.security = { ...document.security, integrityStatus: verification.status, lastVerifiedAt: new Date(), trustScore: 0, trustGrade: "restricted" };
+      await document.save();
+      await recordSecurityEvent({ req, user: req.user._id, document: document._id, type: "integrity", outcome: "blocked", severity: "critical", message: verification.reason });
+      return res.status(409).json({ success: false, message: "Document integrity verification failed. Access blocked." });
+    }
     document.views += 1;
     document.lastOpened = new Date();
     await document.save();
     res.type(document.mimeType || "application/octet-stream");
-    return res.sendFile(path.resolve(document.filepath));
+    return res.send(decryptFile(document.filepath));
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -51,10 +61,19 @@ router.get("/download/:id", async (req, res) => {
     const document = await Document.findOne(owned(req, { deleted: false }));
     if (!document) return res.status(404).json({ success: false, message: "Document not found" });
     if (!document.filepath || !fs.existsSync(document.filepath)) return res.status(404).json({ success: false, message: "Document file is unavailable" });
+    const verification = verifyDocumentIntegrity(document);
+    if (!verification.valid) {
+      document.security = { ...document.security, integrityStatus: verification.status, lastVerifiedAt: new Date(), trustScore: 0, trustGrade: "restricted" };
+      await document.save();
+      await recordSecurityEvent({ req, user: req.user._id, document: document._id, type: "integrity", outcome: "blocked", severity: "critical", message: verification.reason });
+      return res.status(409).json({ success: false, message: "Document integrity verification failed. Download blocked." });
+    }
     document.downloads += 1;
     await document.save();
     res.setHeader("X-Document-Name", document.filename);
-    return res.download(path.resolve(document.filepath), document.filename);
+    res.setHeader("Content-Type", document.mimeType || "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${encodeURIComponent(document.filename)}`);
+    return res.send(decryptFile(document.filepath));
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

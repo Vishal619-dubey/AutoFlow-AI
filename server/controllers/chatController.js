@@ -1,5 +1,7 @@
 const Document = require("../models/Document");
 const { chatWithPdf: askPdf } = require("../services/groqService");
+const { verifyDocumentIntegrity, detectPromptInjection } = require("../services/documentSecurityService");
+const { recordSecurityEvent } = require("../services/securityEventService");
 
 const chatWithPdf = async (req, res) => {
   try {
@@ -21,6 +23,20 @@ const chatWithPdf = async (req, res) => {
         success: false,
         message: "Document not found",
       });
+    }
+
+    const integrity = verifyDocumentIntegrity(document);
+    if (!integrity.valid) {
+      document.security = { ...document.security, integrityStatus: integrity.status, lastVerifiedAt: new Date(), trustScore: 0, trustGrade: "restricted" };
+      await document.save();
+      await recordSecurityEvent({ req, user: req.user._id, document: document._id, type: "ai-retrieval", outcome: "blocked", severity: "critical", message: `AI retrieval blocked: ${integrity.reason}` });
+      return res.status(409).json({ success: false, message: "AI access blocked because document integrity could not be verified." });
+    }
+
+    const questionInjection = detectPromptInjection(question);
+    if (document.security?.promptInjection?.detected || questionInjection.detected) {
+      await recordSecurityEvent({ req, user: req.user._id, document: document._id, type: "prompt-injection", outcome: "blocked", severity: "high", message: "Potential prompt-injection attempt blocked", metadata: { queryMatchCount: questionInjection.matchCount } });
+      return res.status(400).json({ success: false, message: "This request was blocked by the AutoFlow-AI context security policy." });
     }
 
     if (!document.content || document.content.trim() === "") {
@@ -53,11 +69,15 @@ const chatWithPdf = async (req, res) => {
 
     const answer = await askPdf(pdfContent, question.trim());
     document.aiChats += 1;
+    document.security = { ...document.security, integrityStatus: "verified", lastVerifiedAt: new Date() };
     await document.save();
+
+    await recordSecurityEvent({ req, user: req.user._id, document: document._id, type: "ai-retrieval", outcome: "allowed", severity: "info", message: "Authorized evidence-grounded AI retrieval completed" });
 
     res.status(200).json({
       success: true,
       answer,
+      security: { integrity: "verified", accessPolicy: "owner-only", evidenceBound: true },
     });
 
   } catch (error) {
