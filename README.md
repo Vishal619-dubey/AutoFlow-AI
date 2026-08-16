@@ -1,4 +1,4 @@
-# AutoFlow AI
+﻿# AutoFlow AI
 
 <p align="center">
   <img src="docs/autoflow-social-preview.png" alt="AutoFlow AI - Intelligent Document Operations" width="100%" />
@@ -12,10 +12,10 @@
 </p>
 
 <p align="center">
-  <a href="https://autoflow-ai-vishal.netlify.app"><strong>🚀 Live Demo</strong></a>
-  &nbsp;•&nbsp;
+  <a href="https://autoflow-ai-vishal.netlify.app"><strong>ðŸš€ Live Demo</strong></a>
+  &nbsp;â€¢&nbsp;
   <a href="https://autoflow-ai-api.onrender.com">Backend API</a>
-  &nbsp;•&nbsp;
+  &nbsp;â€¢&nbsp;
   <a href="https://github.com/Vishal619-dubey/AutoFlow-AI">Source Code</a>
 </p>
 
@@ -136,8 +136,8 @@ Example storage structure:
 
 ```text
 documents/
-└── USER_ID/
-    └── timestamp-document-name.pdf.afenc
+â””â”€â”€ USER_ID/
+    â””â”€â”€ timestamp-document-name.pdf.afenc
 ```
 
 MongoDB stores the document metadata and security state while the encrypted file remains in S3.
@@ -201,6 +201,67 @@ If verification fails, access is blocked.
 
 ---
 
+## AutoFlow BioTrust
+
+**AutoFlow BioTrust** is a risk-adaptive biometric step-up authentication layer for sensitive document operations.
+
+Normal low-risk document access can continue with the authenticated JWT session. High-priority, critical or sensitive documents require an additional camera-based identity verification step before download.
+
+### Secure Download Flow
+
+`	ext
+Authenticated User
+        |
+        v
+Download Request
+        |
+        v
+Document Risk Evaluation
+        |
+        +-- Safe / Routine --> JWT + Ownership Check
+        |
+        +-- Sensitive / High / Critical
+                    |
+                    v
+             BioTrust Required
+                    |
+                    v
+           Camera Face Capture
+                    |
+                    v
+          AWS Rekognition Match
+                    |
+              +-----+-----+
+              |           |
+           Mismatch      Match
+              |           |
+           BLOCK      3-Minute Proof
+                          |
+                          v
+                Integrity Verification
+                          |
+                          v
+                 Secure Download
+`",
+",
+
+
+- AWS Rekognition face comparison
+- AES-256-GCM encrypted biometric reference
+- Private AWS S3 biometric storage
+- SHA-256 reference-image integrity fingerprint
+- Failed-attempt protection and temporary lockout
+- Short-lived document-specific BioTrust proof
+- Proof bound to the authenticated user and requested document
+- Backend-enforced authorization before sensitive download
+
+### Biometric Privacy
+
+The enrolled reference image is encrypted before storage in private AWS S3. Verification captures are used for identity comparison and are not stored by AutoFlow as new biometric references.
+
+> BioTrust currently provides camera-based face similarity verification. Dedicated biometric liveness detection is not currently implemented.
+
+---
 ## Grounded AI Copilot
 
 The Copilot allows users to ask questions about a selected PDF.
@@ -479,6 +540,21 @@ It:
 
 # Screenshots
 
+## BioTrust API
+
+Authenticated BioTrust endpoints:
+
+    GET    /api/biometric/status
+    POST   /api/biometric/enroll
+    POST   /api/biometric/verify
+    DELETE /api/biometric/enroll
+
+Sensitive document downloads may additionally require:
+
+    X-BioTrust-Proof: short-lived-document-proof
+
+---
+
 ## Automation Command Center
 
 ![AutoFlow AI dashboard](docs/screenshots/dashboard-latest.png)
@@ -487,6 +563,67 @@ It:
 
 ![AutoFlow AI document hub](docs/screenshots/document-hub-latest.png)
 
+## AutoFlow BioTrust
+
+**AutoFlow BioTrust** is a risk-adaptive biometric step-up authentication layer for sensitive document operations.
+
+Normal low-risk document access can continue with the authenticated JWT session. High-priority, critical or sensitive documents require an additional camera-based identity verification step before download.
+
+### Secure Download Flow
+
+`	ext
+Authenticated User
+        |
+        v
+Download Request
+        |
+        v
+Document Risk Evaluation
+        |
+        +-- Safe / Routine --> JWT + Ownership Check
+        |
+        +-- Sensitive / High / Critical
+                    |
+                    v
+             BioTrust Required
+                    |
+                    v
+           Camera Face Capture
+                    |
+                    v
+          AWS Rekognition Match
+                    |
+              +-----+-----+
+              |           |
+           Mismatch      Match
+              |           |
+           BLOCK      3-Minute Proof
+                          |
+                          v
+                Integrity Verification
+                          |
+                          v
+                 Secure Download
+`",
+",
+
+
+- AWS Rekognition face comparison
+- AES-256-GCM encrypted biometric reference
+- Private AWS S3 biometric storage
+- SHA-256 reference-image integrity fingerprint
+- Failed-attempt protection and temporary lockout
+- Short-lived document-specific BioTrust proof
+- Proof bound to the authenticated user and requested document
+- Backend-enforced authorization before sensitive download
+
+### Biometric Privacy
+
+The enrolled reference image is encrypted before storage in private AWS S3. Verification captures are used for identity comparison and are not stored by AutoFlow as new biometric references.
+
+> BioTrust currently provides camera-based face similarity verification. Dedicated biometric liveness detection is not currently implemented.
+
+---
 ## Grounded AI Copilot
 
 ![AutoFlow AI Copilot](docs/screenshots/ai-copilot-latest.png)
@@ -509,6 +646,7 @@ It:
 | ODM | Mongoose |
 | Cloud Storage | AWS S3 |
 | AWS Integration | AWS SDK for JavaScript v3 |
+| Biometric Verification | AWS Rekognition |
 | Authentication | JWT |
 | Password Security | bcrypt |
 | Upload Handling | Multer |
@@ -579,7 +717,7 @@ AutoFlow AI maps its security implementation to the CIA-oriented security model 
 | Security Goal | AutoFlow AI Implementation |
 |---|---|
 | **Confidentiality** | AES-256-GCM encryption, private AWS S3, owner-scoped access |
-| **Authentication / Access Control** | bcrypt password hashing, JWT authentication, protected routes, token versioning |
+| **Authentication / Access Control** | bcrypt password hashing, JWT authentication, protected routes, token versioning, risk-adaptive BioTrust face verification |
 | **Integrity** | SHA-256 fingerprints, authenticated AES-GCM decryption and verification |
 
 ---
@@ -622,53 +760,53 @@ Verified Document
 
 ```text
 AutoFlow-AI/
-│
-├── client/
-│   ├── src/
-│   │   ├── autoflow/
-│   │   │   └── WorkspaceViews.jsx
-│   │   │
-│   │   ├── components/
-│   │   ├── services/
-│   │   │   └── api.js
-│   │   │
-│   │   ├── App.jsx
-│   │   └── index.css
-│   │
-│   ├── package.json
-│   └── .env.example
-│
-├── server/
-│   ├── config/
-│   │
-│   ├── controllers/
-│   │   ├── authController.js
-│   │   ├── chatController.js
-│   │   ├── evidenceController.js
-│   │   └── securityController.js
-│   │
-│   ├── middleware/
-│   ├── models/
-│   │   └── Document.js
-│   │
-│   ├── routes/
-│   │   ├── uploadRoutes.js
-│   │   └── documentRoutes.js
-│   │
-│   ├── services/
-│   │   ├── s3StorageService.js
-│   │   ├── documentSecurityService.js
-│   │   ├── pdfEvidenceService.js
-│   │   ├── groqService.js
-│   │   └── securityEventService.js
-│   │
-│   ├── tests/
-│   ├── package.json
-│   └── server.js
-│
-├── docs/
-│
-└── README.md
+â”‚
+â”œâ”€â”€ client/
+â”‚   â”œâ”€â”€ src/
+â”‚   â”‚   â”œâ”€â”€ autoflow/
+â”‚   â”‚   â”‚   â””â”€â”€ WorkspaceViews.jsx
+â”‚   â”‚   â”‚
+â”‚   â”‚   â”œâ”€â”€ components/
+â”‚   â”‚   â”œâ”€â”€ services/
+â”‚   â”‚   â”‚   â””â”€â”€ api.js
+â”‚   â”‚   â”‚
+â”‚   â”‚   â”œâ”€â”€ App.jsx
+â”‚   â”‚   â””â”€â”€ index.css
+â”‚   â”‚
+â”‚   â”œâ”€â”€ package.json
+â”‚   â””â”€â”€ .env.example
+â”‚
+â”œâ”€â”€ server/
+â”‚   â”œâ”€â”€ config/
+â”‚   â”‚
+â”‚   â”œâ”€â”€ controllers/
+â”‚   â”‚   â”œâ”€â”€ authController.js
+â”‚   â”‚   â”œâ”€â”€ chatController.js
+â”‚   â”‚   â”œâ”€â”€ evidenceController.js
+â”‚   â”‚   â””â”€â”€ securityController.js
+â”‚   â”‚
+â”‚   â”œâ”€â”€ middleware/
+â”‚   â”œâ”€â”€ models/
+â”‚   â”‚   â””â”€â”€ Document.js
+â”‚   â”‚
+â”‚   â”œâ”€â”€ routes/
+â”‚   â”‚   â”œâ”€â”€ uploadRoutes.js
+â”‚   â”‚   â””â”€â”€ documentRoutes.js
+â”‚   â”‚
+â”‚   â”œâ”€â”€ services/
+â”‚   â”‚   â”œâ”€â”€ s3StorageService.js
+â”‚   â”‚   â”œâ”€â”€ documentSecurityService.js
+â”‚   â”‚   â”œâ”€â”€ pdfEvidenceService.js
+â”‚   â”‚   â”œâ”€â”€ groqService.js
+â”‚   â”‚   â””â”€â”€ securityEventService.js
+â”‚   â”‚
+â”‚   â”œâ”€â”€ tests/
+â”‚   â”œâ”€â”€ package.json
+â”‚   â””â”€â”€ server.js
+â”‚
+â”œâ”€â”€ docs/
+â”‚
+â””â”€â”€ README.md
 ```
 
 Research and security implementation notes are available in:
@@ -960,6 +1098,21 @@ GET  /api/security/dashboard
 POST /api/security/scan/:id
 ```
 
+## BioTrust API
+
+Authenticated BioTrust endpoints:
+
+    GET    /api/biometric/status
+    POST   /api/biometric/enroll
+    POST   /api/biometric/verify
+    DELETE /api/biometric/enroll
+
+Sensitive document downloads may additionally require:
+
+    X-BioTrust-Proof: short-lived-document-proof
+
+---
+
 ## Automation
 
 ```text
@@ -1100,7 +1253,7 @@ https://autoflow-ai-api.onrender.com
 
 AutoFlow AI is also being developed as an implementation base for:
 
-> **Context-Aware Zero-Trust Security for AI-Assisted Document Workflows with Encrypted Cloud Storage and Verifiable Evidence Retrieval**
+> **Context-Aware Zero-Trust Security for AI-Assisted Document Workflows with Risk-Adaptive Biometric Step-Up Authentication, Encrypted Cloud Storage and Verifiable Evidence Retrieval**
 
 The core research idea is:
 
@@ -1135,12 +1288,18 @@ Current limitations include:
 - Enterprise role-based access can be expanded
 - End-to-end security testing can be expanded
 - Encryption key rotation requires a formal migration workflow
+- Face similarity verification is probabilistic and may produce false accepts or false rejects
+- Dedicated biometric liveness detection is not yet implemented
+- BioTrust proofs are short-lived and scoped, but are not currently implemented as single-use server-side nonces
 
 ---
 
 # Future Scope
 
 - AWS IAM roles or temporary credentials
+- Dedicated face liveness and presentation-attack detection
+- Single-use biometric proof nonce enforcement
+- Biometric enrollment key rotation
 - Encryption key rotation
 - Secure document re-keying
 - S3 versioning and recovery policies
@@ -1159,7 +1318,7 @@ Current limitations include:
 
 # Resume Summary
 
-> Built AutoFlow AI, a secure full-stack intelligent document workflow platform using React, Node.js, MongoDB, private AWS S3 and Groq AI, featuring AES-256-GCM document encryption, SHA-256 integrity verification, JWT-based owner-scoped access, evidence-grounded PDF Q&A, prompt-injection controls, sensitive-data scanning, human-in-the-loop approvals and auditable workflow automation.
+> Built AutoFlow AI, a secure full-stack intelligent document workflow platform using React, Node.js, MongoDB, private AWS S3, AWS Rekognition and Groq AI, featuring AES-256-GCM encryption, SHA-256 integrity verification, risk-adaptive BioTrust face verification, short-lived document-scoped access proofs, evidence-grounded PDF Q&A, prompt-injection controls, sensitive-data scanning, human-in-the-loop approvals and auditable workflow automation.
 
 ---
 
@@ -1167,7 +1326,7 @@ Current limitations include:
 
 ## Vishal Dubey
 
-**Full-Stack Developer · AI Automation Engineer**
+**Full-Stack Developer Â· AI Automation Engineer**
 
 [GitHub Profile](https://github.com/Vishal619-dubey)
 
@@ -1177,3 +1336,5 @@ Current limitations include:
   <strong>AutoFlow AI</strong><br />
   Secure. Verified. Intelligent. Automated.
 </p>
+
+
