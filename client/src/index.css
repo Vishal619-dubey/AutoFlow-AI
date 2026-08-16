@@ -30,3 +30,1147 @@
 .flow-search{color:#6f7a8f;text-align:left}.flow-search>span{flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.flow-command-overlay{position:fixed;inset:0;z-index:120;background:rgba(3,5,10,.72);backdrop-filter:blur(8px);display:flex;align-items:flex-start;justify-content:center;padding:12vh 20px 20px}.flow-command-dialog{width:min(680px,100%);border:1px solid #323b50;border-radius:17px;background:rgba(13,18,29,.99);box-shadow:0 35px 110px rgba(0,0,0,.7),0 0 0 1px rgba(124,92,255,.06);overflow:hidden;animation:flow-command-in .17s ease-out}@keyframes flow-command-in{from{opacity:0;transform:translateY(-12px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}.flow-command-dialog>header{height:66px;display:flex;align-items:center;gap:11px;padding:0 17px;border-bottom:1px solid #272f40}.flow-command-dialog>header>svg{width:20px;color:#8975ee}.flow-command-dialog>header input{flex:1;border:0;background:transparent;color:#e4e9f2;outline:0;font-size:14px}.flow-command-dialog>header input::placeholder{color:#616d81}.flow-command-dialog>header kbd{border:1px solid #30394c;background:#181f2d;color:#7c8799;border-radius:6px;padding:4px 7px;font-size:7px}.flow-command-results{max-height:480px;overflow-y:auto;padding:8px}.flow-command-results>button{width:100%;height:58px;border:1px solid transparent;border-radius:11px;background:transparent;color:#aeb8c9;padding:0 10px;display:grid;grid-template-columns:38px 1fr auto 20px;align-items:center;gap:10px;text-align:left}.flow-command-results>button.active{border-color:rgba(124,92,255,.25);background:linear-gradient(90deg,rgba(124,92,255,.15),rgba(124,92,255,.04));color:#e4e0ff}.flow-command-icon{width:36px;height:36px;border-radius:10px;background:#202739;color:#907bf4;display:grid;place-items:center}.flow-command-icon.document{background:rgba(50,145,255,.1);color:#68afff}.flow-command-icon svg{width:17px}.flow-command-results>button>span:nth-child(2){min-width:0}.flow-command-results>button b,.flow-command-results>button small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.flow-command-results>button b{font-size:10px}.flow-command-results>button small{font-size:8px;color:#707c90;margin-top:3px}.flow-command-results>button em{font-style:normal;font-size:6px;letter-spacing:.1em;color:#7565c5;border:1px solid rgba(124,92,255,.2);border-radius:10px;padding:3px 5px}.flow-command-enter{width:13px;color:#667287;opacity:0}.flow-command-results>button.active .flow-command-enter{opacity:1}.flow-command-empty{min-height:230px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#606d81;text-align:center}.flow-command-empty svg{width:30px}.flow-command-empty b{font-size:11px;color:#aeb8c9;margin:9px 0 3px}.flow-command-empty span{font-size:8px}.flow-command-dialog>footer{height:42px;border-top:1px solid #252d3e;background:#0b101a;display:flex;align-items:center;gap:15px;padding:0 15px;color:#667287;font-size:7px}.flow-command-dialog>footer span{display:flex;align-items:center;gap:4px}.flow-command-dialog>footer svg{width:11px}.flow-command-dialog>footer kbd{font-size:6px}.flow-command-dialog>footer b{margin-left:auto;color:#7565c5;font-weight:600}
 @media(max-width:600px){.flow-command-overlay{padding:72px 10px 10px}.flow-command-results{max-height:calc(100vh - 210px)}.flow-command-dialog>footer b{display:none}.flow-command-dialog>footer{gap:10px}.flow-command-results>button{grid-template-columns:36px 1fr 15px}.flow-command-results>button em{display:none}.flow-command-enter{grid-column:3}}
 @media print{@page{size:A4;margin:10mm}html,body,#root{background:#fff!important}.flow-sidebar,.flow-topbar,.flow-report-actions{display:none!important}.flow-main{width:100%!important;margin:0!important}.flow-content{max-width:none!important;margin:0!important;padding:0!important}.flow-report-shell{max-width:none!important;margin:0!important}.flow-report-page{min-height:0!important;padding:0!important;border-radius:0!important;box-shadow:none!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.flow-report-section,.flow-report-columns,.flow-report-assurance,.flow-report-footer{break-inside:avoid}.flow-report-hero{padding-top:28px}}
+/* =========================================================
+   AUTOFLOW BIOTRUST
+   Risk-Adaptive Face Verification
+========================================================= */
+
+.biotrust-card{
+  position:relative;
+  overflow:hidden;
+  margin-bottom:20px;
+  padding:0;
+  border-color:rgba(124,92,255,.26);
+  background:
+    radial-gradient(circle at 90% 0%,rgba(124,92,255,.13),transparent 30%),
+    linear-gradient(145deg,#121827,#0c111c);
+}
+
+.biotrust-card::before{
+  content:"";
+  position:absolute;
+  width:240px;
+  height:240px;
+  right:-100px;
+  top:-120px;
+  border-radius:50%;
+  background:rgba(50,145,255,.1);
+  filter:blur(35px);
+  pointer-events:none;
+}
+
+.biotrust-head{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:flex-start;
+  gap:16px;
+  padding:22px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.biotrust-icon{
+  width:50px;
+  height:50px;
+  display:grid;
+  place-items:center;
+  border-radius:15px;
+  background:
+    linear-gradient(135deg,rgba(124,92,255,.25),rgba(50,145,255,.14));
+  color:#a995ff;
+  border:1px solid rgba(124,92,255,.25);
+  box-shadow:0 10px 30px rgba(67,55,170,.18);
+}
+
+.biotrust-icon svg{
+  width:24px;
+  height:24px;
+}
+
+.biotrust-head h2{
+  margin:4px 0 6px;
+  font:800 19px Manrope,sans-serif;
+  letter-spacing:-.02em;
+}
+
+.biotrust-head p{
+  margin:0;
+  max-width:720px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.65;
+}
+
+.biotrust-label{
+  display:block;
+  color:#8c78ff;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.16em;
+}
+
+.biotrust-state{
+  min-width:92px;
+  height:31px;
+  padding:0 11px;
+  border-radius:20px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:9px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.biotrust-state.active{
+  color:#50deb6;
+  border:1px solid rgba(45,212,164,.25);
+  background:rgba(45,212,164,.08);
+}
+
+.biotrust-state.inactive{
+  color:#aab3c4;
+  border:1px solid var(--line);
+  background:#161d2a;
+}
+
+.biotrust-loading{
+  min-height:125px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  color:var(--muted);
+  font-size:11px;
+}
+
+.biotrust-loading svg{
+  width:18px;
+  animation:biotrust-spin 1s linear infinite;
+}
+
+@keyframes biotrust-spin{
+  to{transform:rotate(360deg)}
+}
+
+.biotrust-stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  margin:0 22px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.biotrust-stats>div{
+  min-height:82px;
+  padding:18px 17px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  border-right:1px solid rgba(255,255,255,.06);
+}
+
+.biotrust-stats>div:last-child{
+  border-right:0;
+}
+
+.biotrust-stats span{
+  color:#69758a;
+  font-size:9px;
+  margin-bottom:6px;
+}
+
+.biotrust-stats strong{
+  color:#dfe6f2;
+  font-size:11px;
+  font-weight:700;
+  line-height:1.4;
+}
+
+.biotrust-warning{
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  margin:18px 22px 0;
+  padding:13px 14px;
+  border-radius:11px;
+  border:1px solid rgba(255,184,77,.25);
+  background:rgba(255,184,77,.07);
+  color:#ffc56f;
+}
+
+.biotrust-warning svg{
+  width:19px;
+  flex:0 0 auto;
+}
+
+.biotrust-warning b,
+.biotrust-warning span{
+  display:block;
+}
+
+.biotrust-warning b{
+  font-size:10px;
+}
+
+.biotrust-warning span{
+  margin-top:3px;
+  color:#ae9878;
+  font-size:9px;
+  line-height:1.5;
+}
+
+.biotrust-actions{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:9px;
+  padding:20px 22px 14px;
+}
+
+.biotrust-remove{
+  min-height:36px;
+  padding:0 12px;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  margin-left:auto;
+  color:#ff8392;
+  border:1px solid rgba(255,96,116,.18);
+  background:rgba(255,96,116,.06);
+  border-radius:9px;
+  font-size:10px;
+}
+
+.biotrust-remove:hover{
+  background:rgba(255,96,116,.1);
+}
+
+.biotrust-remove:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+.biotrust-privacy{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:0 22px 20px;
+  color:#718096;
+  font-size:9px;
+  line-height:1.5;
+}
+
+.biotrust-privacy svg{
+  width:16px;
+  color:var(--green);
+  flex:0 0 auto;
+}
+
+/* =========================================================
+   CAMERA MODAL
+========================================================= */
+
+.biotrust-camera-overlay{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:rgba(2,4,10,.84);
+  backdrop-filter:blur(14px);
+}
+
+.biotrust-camera-modal{
+  width:min(620px,100%);
+  max-height:94vh;
+  overflow-y:auto;
+  border:1px solid #30384b;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at top right,rgba(124,92,255,.13),transparent 30%),
+    #0d121e;
+  box-shadow:
+    0 35px 100px rgba(0,0,0,.65),
+    0 0 0 1px rgba(255,255,255,.015);
+}
+
+.biotrust-camera-head{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  padding:20px 22px 17px;
+}
+
+.biotrust-camera-head span{
+  color:#8f7cff;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.17em;
+}
+
+.biotrust-camera-head h3{
+  margin:5px 0;
+  font:800 19px Manrope,sans-serif;
+}
+
+.biotrust-camera-head p{
+  margin:0;
+  color:var(--muted);
+  font-size:10px;
+}
+
+.biotrust-camera-head>button{
+  width:35px;
+  height:35px;
+  flex:0 0 35px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#151b28;
+  color:#97a1b3;
+}
+
+.biotrust-camera-head>button svg{
+  width:17px;
+}
+
+.biotrust-video-wrap{
+  position:relative;
+  width:calc(100% - 44px);
+  margin:0 22px;
+  aspect-ratio:16/10;
+  overflow:hidden;
+  border-radius:16px;
+  background:#030508;
+  border:1px solid #293143;
+}
+
+.biotrust-video-wrap video{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  transform:scaleX(-1);
+}
+
+.biotrust-video-wrap::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(to right,rgba(0,0,0,.18),transparent 20%,transparent 80%,rgba(0,0,0,.18)),
+    linear-gradient(to bottom,rgba(0,0,0,.15),transparent 25%,transparent 75%,rgba(0,0,0,.2));
+}
+
+.biotrust-face-guide{
+  position:absolute;
+  z-index:2;
+  left:50%;
+  top:50%;
+  width:42%;
+  height:73%;
+  transform:translate(-50%,-50%);
+  border:2px solid rgba(160,141,255,.72);
+  border-radius:48% 48% 45% 45%;
+  box-shadow:
+    0 0 0 999px rgba(4,7,13,.2),
+    0 0 25px rgba(124,92,255,.18);
+  pointer-events:none;
+}
+
+.biotrust-face-guide::before,
+.biotrust-face-guide::after,
+.biotrust-face-guide span::before,
+.biotrust-face-guide span::after{
+  content:"";
+  position:absolute;
+  width:24px;
+  height:24px;
+  border-color:#a590ff;
+}
+
+.biotrust-face-guide::before{
+  left:-3px;
+  top:-3px;
+  border-left:3px solid;
+  border-top:3px solid;
+  border-radius:12px 0 0;
+}
+
+.biotrust-face-guide::after{
+  right:-3px;
+  top:-3px;
+  border-right:3px solid;
+  border-top:3px solid;
+  border-radius:0 12px 0 0;
+}
+
+.biotrust-face-guide span::before{
+  left:-3px;
+  bottom:-3px;
+  border-left:3px solid;
+  border-bottom:3px solid;
+  border-radius:0 0 0 12px;
+}
+
+.biotrust-face-guide span::after{
+  right:-3px;
+  bottom:-3px;
+  border-right:3px solid;
+  border-bottom:3px solid;
+  border-radius:0 0 12px;
+}
+
+.biotrust-camera-status{
+  position:absolute;
+  z-index:3;
+  top:13px;
+  left:13px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 9px;
+  border-radius:20px;
+  color:#c8d1df;
+  background:rgba(7,10,18,.72);
+  backdrop-filter:blur(8px);
+  font-size:8px;
+}
+
+.biotrust-camera-status i{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#2dd4a4;
+  box-shadow:0 0 12px rgba(45,212,164,.85);
+}
+
+.biotrust-camera-tip{
+  margin:13px 22px 0;
+  padding:10px 12px;
+  border-radius:10px;
+  color:#78849a;
+  background:#111724;
+  font-size:9px;
+  text-align:center;
+}
+
+.biotrust-camera-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:9px;
+  padding:18px 22px 22px;
+}
+
+/* =========================================================
+   BIOTRUST RESPONSIVE
+========================================================= */
+
+@media(max-width:800px){
+  .biotrust-head{
+    grid-template-columns:auto 1fr;
+  }
+
+  .biotrust-state{
+    grid-column:1 / -1;
+    width:max-content;
+    margin-left:66px;
+  }
+
+  .biotrust-stats{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .biotrust-stats>div{
+    border-bottom:1px solid rgba(255,255,255,.06);
+  }
+
+  .biotrust-stats>div:nth-child(2){
+    border-right:0;
+  }
+
+  .biotrust-stats>div:nth-child(3),
+  .biotrust-stats>div:nth-child(4){
+    border-bottom:0;
+  }
+
+  .biotrust-remove{
+    margin-left:0;
+  }
+}
+
+@media(max-width:520px){
+  .biotrust-head{
+    padding:18px;
+    gap:12px;
+  }
+
+  .biotrust-icon{
+    width:44px;
+    height:44px;
+    border-radius:13px;
+  }
+
+  .biotrust-head h2{
+    font-size:17px;
+  }
+
+  .biotrust-state{
+    margin-left:56px;
+  }
+
+  .biotrust-stats{
+    margin:0 18px;
+    grid-template-columns:1fr;
+  }
+
+  .biotrust-stats>div{
+    min-height:65px;
+    border-right:0;
+    border-bottom:1px solid rgba(255,255,255,.06) !important;
+  }
+
+  .biotrust-stats>div:last-child{
+    border-bottom:0 !important;
+  }
+
+  .biotrust-actions{
+    padding:18px;
+  }
+
+  .biotrust-actions button{
+    width:100%;
+  }
+
+  .biotrust-privacy{
+    padding:0 18px 18px;
+    align-items:flex-start;
+  }
+
+  .biotrust-camera-overlay{
+    padding:10px;
+    align-items:flex-end;
+  }
+
+  .biotrust-camera-modal{
+    max-height:96vh;
+    border-radius:20px 20px 14px 14px;
+  }
+
+  .biotrust-camera-head{
+    padding:18px 16px 14px;
+  }
+
+  .biotrust-video-wrap{
+    width:calc(100% - 32px);
+    margin:0 16px;
+    aspect-ratio:3/4;
+  }
+
+  .biotrust-face-guide{
+    width:62%;
+    height:68%;
+  }
+
+  .biotrust-camera-tip{
+    margin:12px 16px 0;
+  }
+
+  .biotrust-camera-actions{
+    padding:15px 16px 18px;
+    display:grid;
+    grid-template-columns:1fr 1.5fr;
+  }
+}
+/* =========================================================
+   AutoFlow BioTrust - Secure Download Modal
+========================================================= */
+
+.biotrust-download-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.18), transparent 42%),
+    rgba(2, 6, 23, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  overflow-y: auto;
+}
+
+.biotrust-download-modal {
+  position: relative;
+  width: min(100%, 520px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: 26px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 26px;
+  background:
+    linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(7, 13, 28, 0.98));
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.025) inset;
+  color: #f8fafc;
+}
+
+.biotrust-download-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.biotrust-download-modal::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.28);
+  border-radius: 999px;
+}
+
+.biotrust-download-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.biotrust-download-head h2 {
+  margin: 8px 0 7px;
+  font-size: 24px;
+  line-height: 1.18;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+}
+
+.biotrust-download-head p {
+  margin: 0;
+  max-width: 390px;
+  color: #94a3b8;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.biotrust-download-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #93c5fd;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.biotrust-download-close {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.biotrust-download-close:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  transform: rotate(3deg);
+}
+
+.biotrust-download-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 13px 14px;
+  border: 1px solid rgba(96, 165, 250, 0.14);
+  border-radius: 16px;
+  background: rgba(30, 41, 59, 0.55);
+}
+
+.biotrust-download-file > svg {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border-radius: 11px;
+  background: rgba(37, 99, 235, 0.13);
+  color: #60a5fa;
+}
+
+.biotrust-download-file div {
+  min-width: 0;
+}
+
+.biotrust-download-file small {
+  display: block;
+  margin-bottom: 3px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.biotrust-download-file strong {
+  display: block;
+  overflow: hidden;
+  color: #e2e8f0;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.biotrust-download-camera {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid rgba(96, 165, 250, 0.17);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at center, rgba(30, 64, 175, 0.2), transparent 50%),
+    #020617;
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.biotrust-download-camera video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.biotrust-download-camera::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.03), rgba(15, 23, 42, 0.16));
+}
+
+.biotrust-face-frame {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  width: 43%;
+  aspect-ratio: 0.78;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(147, 197, 253, 0.82);
+  border-radius: 46% 46% 42% 42%;
+  box-shadow:
+    0 0 0 999px rgba(2, 6, 23, 0.08),
+    0 0 24px rgba(59, 130, 246, 0.18);
+  pointer-events: none;
+}
+
+.biotrust-face-frame::before,
+.biotrust-face-frame::after,
+.biotrust-face-frame span::before,
+.biotrust-face-frame span::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: #60a5fa;
+}
+
+.biotrust-face-frame::before {
+  top: -3px;
+  left: -3px;
+  border-top: 3px solid;
+  border-left: 3px solid;
+  border-radius: 10px 0 0 0;
+}
+
+.biotrust-face-frame::after {
+  top: -3px;
+  right: -3px;
+  border-top: 3px solid;
+  border-right: 3px solid;
+  border-radius: 0 10px 0 0;
+}
+
+.biotrust-face-frame span::before {
+  bottom: -3px;
+  left: -3px;
+  border-bottom: 3px solid;
+  border-left: 3px solid;
+  border-radius: 0 0 0 10px;
+}
+
+.biotrust-face-frame span::after {
+  right: -3px;
+  bottom: -3px;
+  border-right: 3px solid;
+  border-bottom: 3px solid;
+  border-radius: 0 0 10px 0;
+}
+
+.biotrust-verifying-layer {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  color: #dbeafe;
+}
+
+.biotrust-verifying-layer b {
+  font-size: 14px;
+  letter-spacing: 0.01em;
+}
+
+.biotrust-spin {
+  animation: biotrustSpin 0.85s linear infinite;
+}
+
+@keyframes biotrustSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.biotrust-download-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 14px;
+  padding: 11px 13px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 13px;
+  background: rgba(15, 23, 42, 0.7);
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.biotrust-download-message > span {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #60a5fa;
+  box-shadow: 0 0 9px rgba(96, 165, 250, 0.8);
+}
+
+.biotrust-download-message.ready {
+  color: #bfdbfe;
+}
+
+.biotrust-download-message.ready > span {
+  background: #22c55e;
+  box-shadow: 0 0 9px rgba(34, 197, 94, 0.7);
+}
+
+.biotrust-download-message.error {
+  border-color: rgba(239, 68, 68, 0.17);
+  background: rgba(127, 29, 29, 0.12);
+  color: #fecaca;
+}
+
+.biotrust-download-message.error > span {
+  background: #ef4444;
+  box-shadow: 0 0 9px rgba(239, 68, 68, 0.7);
+}
+
+.biotrust-download-message.verified {
+  border-color: rgba(34, 197, 94, 0.18);
+  background: rgba(20, 83, 45, 0.14);
+  color: #bbf7d0;
+}
+
+.biotrust-download-message.verified > span {
+  background: #22c55e;
+}
+
+.biotrust-download-actions {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.75fr) minmax(180px, 1.4fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.biotrust-primary-btn,
+.biotrust-secondary-btn {
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: 13px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.biotrust-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  background:
+    linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #ffffff;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+}
+
+.biotrust-primary-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.32);
+}
+
+.biotrust-primary-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.biotrust-secondary-btn {
+  border: 1px solid rgba(148, 163, 184, 0.17);
+  background: rgba(255, 255, 255, 0.035);
+  color: #cbd5e1;
+}
+
+.biotrust-secondary-btn:hover:not(:disabled) {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.biotrust-download-privacy {
+  margin: 14px 0 0;
+  padding-top: 13px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  color: #64748b;
+  font-size: 10.5px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .biotrust-download-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .biotrust-download-modal {
+    width: 100%;
+    max-height: 94vh;
+    padding: 20px 17px 18px;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .biotrust-download-head {
+    margin-bottom: 16px;
+  }
+
+  .biotrust-download-head h2 {
+    font-size: 20px;
+  }
+
+  .biotrust-download-head p {
+    font-size: 12px;
+  }
+
+  .biotrust-download-eyebrow {
+    font-size: 9px;
+  }
+
+  .biotrust-download-camera {
+    aspect-ratio: 4 / 3;
+    border-radius: 17px;
+  }
+
+  .biotrust-face-frame {
+    width: 45%;
+  }
+
+  .biotrust-download-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .biotrust-primary-btn {
+    grid-row: 1;
+  }
+
+  .biotrust-secondary-btn {
+    grid-row: 2;
+  }
+
+  .biotrust-download-file strong {
+    max-width: 240px;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 641px) {
+  .biotrust-download-modal {
+    max-width: 470px;
+    padding: 19px;
+  }
+
+  .biotrust-download-camera {
+    aspect-ratio: 16 / 8;
+  }
+
+  .biotrust-download-head h2 {
+    font-size: 21px;
+  }
+}
+
+
+/* =========================================================
+   BioTrust Modal - Final Desktop Polish
+========================================================= */
+
+.biotrust-download-modal {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.biotrust-download-modal::-webkit-scrollbar {
+  display: none;
+}
+
+/* Slightly tighter desktop proportions */
+@media (min-width: 641px) {
+  .biotrust-download-backdrop {
+    padding: 18px;
+  }
+
+  .biotrust-download-modal {
+    width: min(100%, 500px);
+    max-height: calc(100vh - 28px);
+    padding: 22px 24px 18px;
+    border-radius: 24px;
+  }
+
+  .biotrust-download-head {
+    margin-bottom: 16px;
+  }
+
+  .biotrust-download-head h2 {
+    margin-top: 7px;
+    margin-bottom: 5px;
+    font-size: 23px;
+  }
+
+  .biotrust-download-head p {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .biotrust-download-file {
+    margin-bottom: 14px;
+    padding: 11px 13px;
+  }
+
+  .biotrust-download-camera {
+    aspect-ratio: 16 / 9.25;
+    max-height: 340px;
+  }
+
+  .biotrust-face-frame {
+    width: 40%;
+  }
+
+  .biotrust-download-message {
+    margin-top: 12px;
+    padding: 10px 12px;
+  }
+
+  .biotrust-download-actions {
+    margin-top: 13px;
+  }
+
+  .biotrust-primary-btn,
+  .biotrust-secondary-btn {
+    min-height: 44px;
+  }
+
+  .biotrust-download-privacy {
+    margin-top: 11px;
+    padding-top: 10px;
+  }
+}
+
+/* Keep laptop screens comfortable without internal scrolling */
+@media (min-width: 641px) and (max-height: 820px) {
+  .biotrust-download-modal {
+    width: min(100%, 470px);
+    padding: 18px 21px 15px;
+  }
+
+  .biotrust-download-head {
+    margin-bottom: 12px;
+  }
+
+  .biotrust-download-head h2 {
+    font-size: 21px;
+  }
+
+  .biotrust-download-head p {
+    font-size: 12px;
+  }
+
+  .biotrust-download-file {
+    margin-bottom: 11px;
+    padding: 9px 11px;
+  }
+
+  .biotrust-download-camera {
+    aspect-ratio: 16 / 8;
+    max-height: 285px;
+  }
+
+  .biotrust-download-message {
+    margin-top: 9px;
+    padding: 8px 10px;
+  }
+
+  .biotrust-download-actions {
+    margin-top: 10px;
+  }
+
+  .biotrust-primary-btn,
+  .biotrust-secondary-btn {
+    min-height: 41px;
+  }
+
+  .biotrust-download-privacy {
+    margin-top: 8px;
+    padding-top: 8px;
+    font-size: 9.5px;
+  }
+}

@@ -15,6 +15,7 @@ const activityRoutes = require("./routes/activityRoutes");
 const automationRoutes = require("./routes/automationRoutes");
 const securityRoutes = require("./routes/securityRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const biometricRoutes = require("./routes/biometricRoutes");
 const { rateLimit } = require("./middleware/rateLimitMiddleware");
 
 // Connect MongoDB
@@ -43,7 +44,7 @@ app.use(
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-BioTrust-Proof"],
   })
 );
 
@@ -64,6 +65,7 @@ app.use("/api/knowledge", knowledgeRoutes);
 app.use("/api/activity", activityRoutes);
 app.use("/api/automation", automationRoutes);
 app.use("/api/security", securityRoutes);
+app.use("/api/biometric", biometricRoutes);
 app.use("/api/notifications", notificationRoutes);
 
 // Health check

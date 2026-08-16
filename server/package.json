@@ -8,6 +8,7 @@
     "test": "node --test tests/*.test.js"
   },
   "dependencies": {
+    "@aws-sdk/client-rekognition": "^3.1111.0",
     "@aws-sdk/client-s3": "^3.1111.0",
     "@google/genai": "^2.10.0",
     "bcryptjs": "^3.0.3",

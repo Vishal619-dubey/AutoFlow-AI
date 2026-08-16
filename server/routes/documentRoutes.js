@@ -22,8 +22,52 @@ const {
 const {
   recordSecurityEvent,
 } = require("../services/securityEventService");
+const {
+  verifyBiometricProof,
+} = require("../services/biometricProofService");
 
 const router = express.Router();
+/* =====================================
+   BioTrust risk policy
+===================================== */
+
+function requiresBioTrust(document) {
+  const priority =
+    String(document?.priority || "")
+      .toLowerCase();
+
+  const sensitiveData =
+    document?.sensitiveData || {};
+
+  const privacyRisk =
+    String(
+      sensitiveData.riskLevel || ""
+    ).toLowerCase();
+
+  const totalFindings =
+    Number(
+      sensitiveData.totalFindings || 0
+    );
+
+  const highPriority =
+    priority === "high" ||
+    priority === "critical";
+
+  const sensitivePrivacyRisk =
+    privacyRisk === "medium" ||
+    privacyRisk === "high" ||
+    privacyRisk === "critical";
+
+  const sensitiveFindings =
+    totalFindings > 0;
+
+  return (
+    highPriority ||
+    sensitivePrivacyRisk ||
+    sensitiveFindings
+  );
+}
+
 
 router.use(protect);
 
@@ -397,6 +441,98 @@ router.get(
           success: false,
           message:
             "Document not found",
+        });
+      }
+
+      const bioTrustRequired =
+        requiresBioTrust(document);
+
+      if (bioTrustRequired) {
+        const faceAuth =
+          req.user?.faceAuth || {};
+
+        if (
+          !faceAuth.enabled ||
+          !faceAuth.enrolled
+        ) {
+          await recordSecurityEvent({
+            req,
+            user: req.user._id,
+            document: document._id,
+            type: "biotrust_access",
+            outcome: "blocked",
+            severity: "high",
+            message:
+              "Sensitive document download blocked because BioTrust is not enrolled",
+          });
+
+          return res.status(403).json({
+            success: false,
+            code:
+              "BIOTRUST_ENROLLMENT_REQUIRED",
+            message:
+              "This sensitive document requires BioTrust face enrollment before download.",
+            documentId:
+              String(document._id),
+            bioTrustRequired: true,
+          });
+        }
+
+        const proofToken =
+          req.get("X-BioTrust-Proof") ||
+          "";
+
+        const proof =
+          verifyBiometricProof({
+            token: proofToken,
+            userId: req.user._id,
+            documentId:
+              document._id,
+            faceVersion:
+              Number(
+                faceAuth.version || 1
+              ),
+          });
+
+        if (!proof.valid) {
+          await recordSecurityEvent({
+            req,
+            user: req.user._id,
+            document: document._id,
+            type: "biotrust_access",
+            outcome: "blocked",
+            severity: "high",
+            message:
+              `Sensitive document download requires fresh BioTrust verification (${proof.reason})`,
+            metadata: {
+              reason: proof.reason,
+              priority:
+                document.priority ||
+                "unknown",
+            },
+          });
+
+          return res.status(403).json({
+            success: false,
+            code: "BIOTRUST_REQUIRED",
+            message:
+              "Sensitive document. Verify your identity with BioTrust before downloading.",
+            reason: proof.reason,
+            documentId:
+              String(document._id),
+            bioTrustRequired: true,
+          });
+        }
+
+        await recordSecurityEvent({
+          req,
+          user: req.user._id,
+          document: document._id,
+          type: "biotrust_access",
+          outcome: "allowed",
+          severity: "info",
+          message:
+            "Sensitive document download authorized by BioTrust",
         });
       }
 
