@@ -13,6 +13,53 @@ import API from "../services/api";
 const badge = (value) => <span className={`flow-badge ${String(value).toLowerCase()}`}>{value}</span>;
 const formatSize = (bytes = 0) => bytes > 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.ceil(bytes / 1024)} KB`;
 
+const triggerBrowserDownload = (blob, filename = "document") => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  link.href = url;
+  link.download = filename || "document";
+  link.rel = "noopener";
+  link.style.display = "none";
+
+  // iOS Safari may ignore the download attribute for Blob URLs.
+  // Opening the same Blob URL in a new tab gives the user a usable fallback.
+  if (isIOS) {
+    link.target = "_blank";
+  }
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  // Do not revoke immediately. Mobile browsers may still be reading the Blob.
+  window.setTimeout(() => {
+    window.URL.revokeObjectURL(url);
+  }, 10000);
+};
+
+const getDownloadErrorMessage = async (error, fallback = "Download failed") => {
+  try {
+    if (error.response?.data instanceof Blob) {
+      const text = await error.response.data.text();
+
+      if (text) {
+        const parsed = JSON.parse(text);
+        return parsed?.message || fallback;
+      }
+    }
+
+    return error.response?.data?.message || fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+
 function PageHeader({ eyebrow, title, description, action }) {
   return <div className="flow-page-head"><div><span className="flow-eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div>{action}</div>;
 }
@@ -61,7 +108,29 @@ export function DashboardPage() {
 function DocumentTable({ documents, compact = false, onRefresh }) {
   if (!documents.length) return <div className="flow-empty"><FileText /><h3>No documents yet</h3><p>Upload a document and AutoFlow will classify and route it automatically.</p></div>;
   const process = async (id) => { try { await API.post(`/automation/process/${id}`); toast.success("Document processed"); onRefresh?.(); } catch { toast.error("Processing failed"); } };
-  const downloadDocument = async (doc) => { try { const response = await API.get(`/documents/download/${doc._id}`, { responseType: "blob" }); const url = URL.createObjectURL(response.data); const link = document.createElement("a"); link.href = url; link.download = doc.filename; link.click(); URL.revokeObjectURL(url); toast.success("Download started"); } catch { toast.error("Download failed"); } };
+  const downloadDocument = async (doc) => {
+    try {
+      const response = await API.get(`/documents/download/${doc._id}`, {
+        responseType: "blob",
+      });
+
+      const contentType =
+        response.headers?.["content-type"] ||
+        doc.mimeType ||
+        "application/octet-stream";
+
+      const blob =
+        response.data instanceof Blob
+          ? response.data
+          : new Blob([response.data], { type: contentType });
+
+      triggerBrowserDownload(blob, doc.filename || "document");
+      toast.success("Download started");
+    } catch (error) {
+      console.error("Document download error:", error);
+      toast.error(await getDownloadErrorMessage(error));
+    }
+  };
   const removeDocument = async (doc) => { if (!window.confirm(`Move "${doc.filename}" to Trash? You can restore it later.`)) return; try { await API.delete(`/documents/${doc._id}`); toast.success("Document moved to Trash"); onRefresh?.(); } catch (error) { toast.error(error.response?.data?.message || "Unable to remove document"); } };
   return <div className="flow-table-wrap"><table className="flow-table"><thead><tr><th>Document</th><th>Classification</th><th>Priority</th><th>Status</th><th>AI score</th>{!compact && <th />}</tr></thead><tbody>{documents.map((doc) => <tr key={doc._id}><td><div className="flow-doc-name"><span><FileText /></span><div><b>{doc.filename}</b><small>{formatSize(doc.filesize)} · {new Date(doc.createdAt).toLocaleDateString()}</small></div></div></td><td>{doc.classification || doc.category || "General"}</td><td>{badge(doc.priority || "medium")}</td><td>{badge(doc.workflowStatus || "processed")}</td><td><div className="flow-confidence"><i style={{ width: `${doc.automationScore || 0}%` }} /><span>{doc.automationScore || 0}%</span></div></td>{!compact && <td><div className="flow-row-actions">{doc.fileType === "pdf" && <button className="flow-icon-btn evidence" title="Open Evidence Studio" onClick={() => window.location.assign(`/evidence/${doc._id}`)}><Eye size={16} /></button>}<button className="flow-icon-btn report" title="Generate executive report" onClick={() => window.location.assign(`/report/${doc._id}`)}><FileOutput size={16} /></button><button className="flow-icon-btn" title="Download securely" onClick={() => downloadDocument(doc)}><Download size={16} /></button><button className="flow-icon-btn" title="Run automation" onClick={() => process(doc._id)}><RefreshCw size={16} /></button><button className="flow-icon-btn danger" title="Move to Trash" onClick={() => removeDocument(doc)}><Trash2 size={16} /></button></div></td>}</tr>)}</tbody></table></div>;
 }
@@ -307,16 +376,34 @@ export function EvidenceStudioPage() {
 
   const download = async () => {
     try {
-      const response = await API.get(`/documents/download/${id}`, { responseType: "blob" });
-      const url = URL.createObjectURL(response.data);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = profile.document.filename;
-      link.click();
-      URL.revokeObjectURL(url);
+      const response = await API.get(`/documents/download/${id}`, {
+        responseType: "blob",
+      });
+
+      const contentType =
+        response.headers?.["content-type"] ||
+        profile?.document?.mimeType ||
+        "application/octet-stream";
+
+      const blob =
+        response.data instanceof Blob
+          ? response.data
+          : new Blob([response.data], { type: contentType });
+
+      triggerBrowserDownload(
+        blob,
+        profile?.document?.filename || "document"
+      );
+
       toast.success("Verified document downloaded");
-    } catch {
-      toast.error("Download failed");
+    } catch (error) {
+      console.error("Evidence download error:", error);
+      toast.error(
+        await getDownloadErrorMessage(
+          error,
+          "Verified document download failed"
+        )
+      );
     }
   };
 

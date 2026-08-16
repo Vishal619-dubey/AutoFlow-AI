@@ -12,9 +12,26 @@ const documentSchema = new mongoose.Schema(
     },
 
     filepath: {
-      type: String,
-      required: true,
-    },
+  type: String,
+  default: "",
+},
+
+storageProvider: {
+  type: String,
+  enum: ["local", "s3"],
+  default: "local",
+},
+
+s3Key: {
+  type: String,
+  default: "",
+},
+
+storageStatus: {
+  type: String,
+  enum: ["available", "missing"],
+  default: "available",
+},
 
     filesize: {
       type: Number,
