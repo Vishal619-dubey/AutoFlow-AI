@@ -1,7 +1,9 @@
-const User = require("../models/User");
+﻿const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { OAuth2Client } = require("google-auth-library");
+const googleClient = new OAuth2Client();
 const { recordSecurityEvent } = require("../services/securityEventService");
 
 const publicUser = (user) => ({
@@ -97,6 +99,13 @@ const loginUser = async (req, res) => {
     }
 
     // Compare Password
+    if (!user.password) {
+      return res.status(400).json({
+        success: false,
+        message: "This account uses Google Sign-In. Continue with Google.",
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -131,6 +140,117 @@ const loginUser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server Error",
+    });
+  }
+};
+
+
+// ================= GOOGLE LOGIN =================
+const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        success: false,
+        message: "Google credential is required",
+      });
+    }
+
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(500).json({
+        success: false,
+        message: "Google authentication is not configured",
+      });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload?.sub || !payload?.email || payload.email_verified !== true) {
+      return res.status(401).json({
+        success: false,
+        message: "Google account could not be verified",
+      });
+    }
+
+    const googleId = String(payload.sub);
+    const email = String(payload.email).trim().toLowerCase();
+    const name = String(payload.name || email.split("@")[0]).trim();
+    const picture = String(payload.picture || "");
+
+    let user = await User.findOne({
+      $or: [{ googleId }, { email }],
+    });
+
+    if (user) {
+      if (user.googleId && user.googleId !== googleId) {
+        return res.status(409).json({
+          success: false,
+          message: "This email is already linked to another Google identity",
+        });
+      }
+
+      if (!user.googleId) user.googleId = googleId;
+      user.authProvider = user.password ? "both" : "google";
+
+      if (!user.name) user.name = name;
+      if (!user.avatar && picture) user.avatar = picture;
+
+      user.failedLoginAttempts = 0;
+      user.lockUntil = null;
+      user.lastLoginAt = new Date();
+      user.lastLoginIpHash = crypto
+        .createHash("sha256")
+        .update(req.ip || "unknown")
+        .digest("hex")
+        .slice(0, 16);
+
+      await user.save();
+    } else {
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        authProvider: "google",
+        avatar: picture,
+        lastLoginAt: new Date(),
+        lastLoginIpHash: crypto
+          .createHash("sha256")
+          .update(req.ip || "unknown")
+          .digest("hex")
+          .slice(0, 16),
+      });
+    }
+
+    const token = signToken(user);
+
+    await recordSecurityEvent({
+      req,
+      user: user._id,
+      type: "login",
+      outcome: "allowed",
+      severity: "info",
+      message: "Google authenticated session created",
+      metadata: { provider: "google" },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Google login successful",
+      token,
+      user: publicUser(user),
+    });
+  } catch (error) {
+    console.error("Google Login Error:", error.message);
+
+    return res.status(401).json({
+      success: false,
+      message: "Google authentication failed",
     });
   }
 };
@@ -198,7 +318,9 @@ const updateProfile = async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
+  googleLogin,
   getProfile,
   updateProfile,
   logoutUser,
 };
+

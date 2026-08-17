@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+﻿const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
@@ -18,8 +18,20 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: true,
+      required: false,
       minlength: 6,
+    },
+
+    authProvider: {
+      type: String,
+      enum: ["local", "google", "both"],
+      default: "local",
+    },
+
+    googleId: {
+      type: String,
+      default: "",
+      index: true,
     },
 
     role: {
