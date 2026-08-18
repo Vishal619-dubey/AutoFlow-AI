@@ -12,10 +12,10 @@
 </p>
 
 <p align="center">
-  <a href="https://autoflow-ai-vishal.netlify.app"><strong>ðŸš€ Live Demo</strong></a>
-  &nbsp;â€¢&nbsp;
+  <a href="https://autoflow-ai-vishal.netlify.app"><strong>Live Demo</strong></a>
+  &nbsp;|&nbsp;
   <a href="https://autoflow-ai-api.onrender.com">Backend API</a>
-  &nbsp;â€¢&nbsp;
+  &nbsp;|&nbsp;
   <a href="https://github.com/Vishal619-dubey/AutoFlow-AI">Source Code</a>
 </p>
 
