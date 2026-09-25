@@ -22,6 +22,12 @@ API.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+
+      const publicRoutes = ["/login", "/register"];
+
+      if (!publicRoutes.includes(window.location.pathname)) {
+        window.location.replace("/login");
+      }
     }
 
     return Promise.reject(error);
