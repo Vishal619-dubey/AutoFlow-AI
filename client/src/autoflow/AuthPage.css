@@ -1049,3 +1049,1065 @@
     0 0 0 1000px #ffffff inset,
     0 0 0 4px rgba(59, 130, 246, 0.09);
 }
+/* AUTOFLOW AUTH RESPONSIVE HARDENING 2026-09-25 */
+
+@media (max-width:1024px),
+       (max-width:1180px) and (hover:none) and (pointer:coarse){
+
+  .af-auth2{
+    display:block;
+    min-height:100dvh;
+    height:auto;
+    overflow-x:hidden;
+    overflow-y:auto;
+    background:#f6f8fc;
+  }
+
+  .af-auth2-visual{
+    display:none;
+  }
+
+  .af-auth2-panel{
+    min-height:100dvh;
+    padding:24px 18px;
+    place-items:center;
+    background:
+      radial-gradient(circle at 50% -10%,rgba(37,99,235,.1),transparent 34%),
+      #f6f8fc;
+  }
+
+  .af-auth2-card{
+    width:min(100%,480px);
+    padding:34px 30px 28px;
+    border-radius:24px;
+    box-shadow:0 24px 65px rgba(15,23,42,.1);
+  }
+
+  .af-auth2-mobile-brand{
+    display:flex;
+    align-items:center;
+  }
+
+  .af-auth2-heading h2{
+    font-size:30px;
+  }
+}
+
+@media (max-width:520px){
+
+  .af-auth2-panel{
+    padding:12px;
+  }
+
+  .af-auth2-card{
+    width:100%;
+    padding:26px 18px 22px;
+    border-radius:20px;
+  }
+
+  .af-auth2-mobile-brand{
+    margin-bottom:24px;
+  }
+
+  .af-auth2-heading h2{
+    font-size:27px;
+  }
+
+  .af-auth2-heading p{
+    font-size:13px;
+    line-height:1.55;
+  }
+
+  .af-auth2-form{
+    gap:14px;
+  }
+
+  .af-auth2-form input{
+    height:50px;
+  }
+
+  .af-auth2-submit{
+    min-height:50px;
+  }
+}
+
+/* Login in phone Desktop Site mode */
+@media (min-width:901px) and (max-width:1180px)
+       and (hover:none) and (pointer:coarse){
+
+  .af-auth2-card{
+    width:min(82vw,760px);
+    padding:48px 54px 40px;
+  }
+
+  .af-auth2-heading h2{
+    font-size:42px;
+  }
+
+  .af-auth2-heading p{
+    max-width:620px;
+    font-size:18px;
+  }
+
+  .af-auth2-form input{
+    height:64px;
+    font-size:17px;
+  }
+
+  .af-auth2-submit{
+    min-height:64px;
+    font-size:17px;
+  }
+}
+
+
+/* AUTOFLOW MOBILE LOGIN PREMIUM 2026-09-25 */
+@media (max-width:900px){
+
+  .af-auth2{
+    min-height:100dvh !important;
+    background:
+      radial-gradient(circle at 15% 0%,
+        rgba(37,99,235,.16),
+        transparent 34%),
+      radial-gradient(circle at 100% 12%,
+        rgba(99,102,241,.11),
+        transparent 32%),
+      linear-gradient(180deg,#eef4ff 0%,#f8faff 45%,#f4f7fc 100%) !important;
+  }
+
+  .af-auth2-panel{
+    position:relative;
+    min-height:100dvh !important;
+    display:flex !important;
+    align-items:flex-start !important;
+    justify-content:center !important;
+    padding:46px 16px 30px !important;
+    background:transparent !important;
+    overflow:hidden;
+  }
+
+  .af-auth2-panel::before{
+    content:"";
+    position:absolute;
+    width:260px;
+    height:260px;
+    border-radius:50%;
+    top:-120px;
+    right:-100px;
+    background:rgba(37,99,235,.08);
+    filter:blur(2px);
+    pointer-events:none;
+  }
+
+  .af-auth2-card{
+    position:relative;
+    z-index:1;
+    width:100% !important;
+    max-width:430px !important;
+    margin:0 !important;
+    padding:30px 24px 25px !important;
+    border:1px solid rgba(255,255,255,.9) !important;
+    border-radius:24px !important;
+    background:rgba(255,255,255,.94) !important;
+    backdrop-filter:blur(18px);
+    box-shadow:
+      0 24px 65px rgba(30,64,175,.11),
+      0 8px 24px rgba(15,23,42,.06) !important;
+  }
+
+  .af-auth2-mobile-brand{
+    display:flex !important;
+    align-items:center;
+    justify-content:flex-start;
+    gap:9px;
+    margin-bottom:25px !important;
+    color:#0f172a;
+  }
+
+  .af-auth2-mobile-brand svg{
+    width:27px;
+    height:27px;
+    padding:5px;
+    border-radius:9px;
+    color:#fff !important;
+    background:linear-gradient(135deg,#2563eb,#4f46e5);
+    box-sizing:content-box;
+  }
+
+  .af-auth2-mobile-brand strong{
+    font-size:18px !important;
+    font-weight:800;
+  }
+
+  .af-auth2-heading{
+    margin-bottom:23px !important;
+  }
+
+  .af-auth2-secure-label{
+    margin-bottom:11px !important;
+    font-size:10px !important;
+  }
+
+  .af-auth2-heading h2{
+    font-size:31px !important;
+    line-height:1.1;
+    letter-spacing:-1.2px !important;
+  }
+
+  .af-auth2-heading p{
+    margin-top:9px !important;
+    font-size:14px !important;
+    line-height:1.55;
+  }
+
+  .af-auth2-google{
+    width:100%;
+    min-height:48px !important;
+  }
+
+  .af-auth2-google iframe{
+    min-height:48px !important;
+  }
+
+  .af-auth2-divider{
+    margin:20px 0 !important;
+  }
+
+  .af-auth2-form{
+    gap:16px !important;
+  }
+
+  .af-auth2-form label > span{
+    font-size:12px !important;
+  }
+
+  .af-auth2-form input{
+    height:52px !important;
+    font-size:14px !important;
+    border-radius:12px !important;
+    background:#fbfcff !important;
+  }
+
+  .af-auth2-submit{
+    min-height:52px !important;
+    border-radius:12px !important;
+    font-size:14px !important;
+    background:
+      linear-gradient(135deg,#1672f3 0%,#3156df 100%) !important;
+    box-shadow:0 12px 26px rgba(37,99,235,.24) !important;
+  }
+
+  .af-auth2-switch{
+    margin-top:21px !important;
+    font-size:12px !important;
+  }
+
+  .af-auth2-trust{
+    margin-top:20px !important;
+    padding-top:17px !important;
+    font-size:10px !important;
+  }
+}
+
+@media (max-width:420px){
+
+  .af-auth2-panel{
+    padding:30px 12px 24px !important;
+  }
+
+  .af-auth2-card{
+    padding:27px 20px 23px !important;
+    border-radius:22px !important;
+  }
+
+  .af-auth2-heading h2{
+    font-size:29px !important;
+  }
+}
+
+
+/* AUTOFLOW MOBILE AUTH FINAL BACKGROUND */
+@media (max-width:900px){
+
+  .af-auth2{
+    min-height:100svh !important;
+    background:#071225 !important;
+  }
+
+  .af-auth2-panel{
+    position:relative !important;
+    min-height:100svh !important;
+    display:flex !important;
+    align-items:flex-start !important;
+    justify-content:center !important;
+    padding:42px 14px 30px !important;
+    overflow:hidden !important;
+
+    background:
+      radial-gradient(
+        circle at 10% 12%,
+        rgba(59,130,246,.40) 0,
+        rgba(59,130,246,.16) 22%,
+        transparent 42%
+      ),
+      radial-gradient(
+        circle at 95% 28%,
+        rgba(124,92,255,.34) 0,
+        rgba(124,92,255,.12) 24%,
+        transparent 45%
+      ),
+      radial-gradient(
+        circle at 50% 100%,
+        rgba(14,165,233,.20),
+        transparent 42%
+      ),
+      linear-gradient(
+        155deg,
+        #06101f 0%,
+        #0a1730 46%,
+        #0d1c38 72%,
+        #07111f 100%
+      ) !important;
+  }
+
+  .af-auth2-panel::before{
+    content:"" !important;
+    position:absolute !important;
+    inset:0 !important;
+    width:auto !important;
+    height:auto !important;
+    border-radius:0 !important;
+
+    background-image:
+      linear-gradient(
+        rgba(255,255,255,.025) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        rgba(255,255,255,.025) 1px,
+        transparent 1px
+      ) !important;
+
+    background-size:32px 32px !important;
+    opacity:.6 !important;
+    filter:none !important;
+    pointer-events:none !important;
+  }
+
+  .af-auth2-panel::after{
+    content:"";
+    position:absolute;
+    width:280px;
+    height:280px;
+    left:-130px;
+    bottom:-100px;
+    border-radius:50%;
+    border:1px solid rgba(96,165,250,.16);
+    box-shadow:
+      0 0 0 45px rgba(59,130,246,.035),
+      0 0 0 90px rgba(59,130,246,.018);
+    pointer-events:none;
+  }
+
+  .af-auth2-card{
+    position:relative !important;
+    z-index:5 !important;
+    width:100% !important;
+    max-width:430px !important;
+    margin:0 !important;
+
+    border:1px solid rgba(255,255,255,.72) !important;
+    border-radius:24px !important;
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(255,255,255,.99),
+        rgba(248,250,255,.97)
+      ) !important;
+
+    box-shadow:
+      0 35px 80px rgba(0,0,0,.35),
+      0 10px 30px rgba(37,99,235,.15) !important;
+  }
+
+  .af-auth2-mobile-brand svg{
+    background:linear-gradient(
+      135deg,
+      #1677ff,
+      #5146e5
+    ) !important;
+
+    color:white !important;
+    box-shadow:
+      0 8px 20px rgba(37,99,235,.28);
+  }
+
+  .af-auth2-submit{
+    background:
+      linear-gradient(
+        135deg,
+        #0f7cff 0%,
+        #3158e8 52%,
+        #543be1 100%
+      ) !important;
+
+    box-shadow:
+      0 12px 28px rgba(37,99,235,.30) !important;
+  }
+}
+
+@media (max-width:420px){
+  .af-auth2-panel{
+    padding-top:28px !important;
+  }
+}
+
+
+/* AUTOFLOW AUTH FORCE MOBILE DESIGN */
+@media (max-width:900px),
+       (max-width:1180px) and (hover:none) and (pointer:coarse){
+
+  .af-auth2{
+    display:block !important;
+    min-height:100dvh !important;
+    background:#06101f !important;
+  }
+
+  .af-auth2-visual{
+    display:none !important;
+  }
+
+  .af-auth2-panel{
+    width:100% !important;
+    min-height:100dvh !important;
+    display:flex !important;
+    align-items:flex-start !important;
+    justify-content:center !important;
+    padding:30px 14px !important;
+
+    background:
+      radial-gradient(circle at 5% 8%,rgba(37,99,235,.50),transparent 36%),
+      radial-gradient(circle at 100% 28%,rgba(124,92,255,.42),transparent 38%),
+      linear-gradient(150deg,#050d1a,#0b1933 55%,#111c3c) !important;
+  }
+
+  .af-auth2-card{
+    width:100% !important;
+    max-width:430px !important;
+    margin:0 auto !important;
+    padding:28px 22px 24px !important;
+    border-radius:24px !important;
+    background:#ffffff !important;
+    box-shadow:0 30px 80px rgba(0,0,0,.38) !important;
+  }
+
+  .af-auth2-mobile-brand{
+    display:flex !important;
+  }
+
+  .af-auth2-heading h2{
+    font-size:30px !important;
+  }
+
+  .af-auth2-form input{
+    height:52px !important;
+  }
+
+  .af-auth2-submit{
+    min-height:52px !important;
+    background:linear-gradient(135deg,#087cff,#3158e8,#553ce2) !important;
+  }
+}
+
+
+/* AUTOFLOW AUTH MOBILE CENTER FINAL */
+@media (max-width:900px),
+       (max-width:1180px) and (hover:none) and (pointer:coarse){
+
+  .af-auth2-panel{
+    min-height:100dvh !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:24px 16px !important;
+  }
+
+  .af-auth2-card{
+    width:calc(100% - 8px) !important;
+    max-width:430px !important;
+    margin:auto !important;
+    transform:none !important;
+  }
+}
+
+/* Phone using Desktop Site */
+@media (min-width:901px) and (max-width:1180px)
+       and (hover:none) and (pointer:coarse){
+
+  .af-auth2-card{
+    max-width:520px !important;
+    padding:34px 30px 28px !important;
+  }
+
+  .af-auth2-heading h2{
+    font-size:32px !important;
+  }
+}
+
+
+/* =========================================================
+   AUTOFLOW AUTH - FINAL RESPONSIVE PREMIUM DESIGN
+   Desktop = classic split
+   Mobile/Desktop-Site-on-phone = responsive stacked split
+========================================================= */
+
+.af-auth2-signature{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  margin-top:14px;
+  color:#94a3b8;
+  font-size:9px;
+  letter-spacing:.15px;
+}
+
+.af-auth2-signature span{
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:#2563eb;
+  box-shadow:0 0 9px rgba(37,99,235,.55);
+}
+
+.af-auth2-signature strong{
+  color:#64748b;
+  font-weight:750;
+}
+
+/* PHONE + PHONE DESKTOP SITE */
+@media (max-width:900px),
+       (max-width:1180px) and (hover:none) and (pointer:coarse){
+
+  html,
+  body,
+  #root{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden !important;
+  }
+
+  .af-auth2{
+    width:100% !important;
+    min-height:100dvh !important;
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    grid-template-rows:auto 1fr !important;
+    overflow-x:hidden !important;
+    background:#f4f7fc !important;
+  }
+
+  /* OLD AUTOFLOW DARK VISUAL - MOBILE VERSION */
+  .af-auth2-visual{
+    display:flex !important;
+    width:100% !important;
+    min-height:305px !important;
+    height:auto !important;
+    padding:25px 20px 72px !important;
+    box-sizing:border-box;
+
+    background:
+      radial-gradient(
+        circle at 8% 4%,
+        rgba(37,99,235,.38),
+        transparent 34%
+      ),
+      radial-gradient(
+        circle at 92% 45%,
+        rgba(37,99,235,.11),
+        transparent 38%
+      ),
+      linear-gradient(
+        150deg,
+        #061326 0%,
+        #071c37 52%,
+        #05213b 100%
+      ) !important;
+
+    overflow:hidden !important;
+  }
+
+  .af-auth2-visual::before{
+    width:340px !important;
+    height:340px !important;
+    top:-170px !important;
+    right:-140px !important;
+    opacity:.75;
+  }
+
+  .af-auth2-brand{
+    gap:10px !important;
+  }
+
+  .af-auth2-logo{
+    width:40px !important;
+    height:40px !important;
+    border-radius:12px !important;
+  }
+
+  .af-auth2-logo svg{
+    width:22px;
+  }
+
+  .af-auth2-brand strong{
+    font-size:16px !important;
+  }
+
+  .af-auth2-brand span{
+    font-size:9px !important;
+  }
+
+  .af-auth2-hero{
+    margin:30px 0 0 !important;
+    max-width:100% !important;
+  }
+
+  .af-auth2-kicker{
+    margin-bottom:14px !important;
+    padding:6px 9px !important;
+    font-size:8px !important;
+    letter-spacing:.9px !important;
+  }
+
+  .af-auth2-hero h1{
+    max-width:330px !important;
+    margin:0 !important;
+    font-size:34px !important;
+    line-height:1.03 !important;
+    letter-spacing:-1.5px !important;
+  }
+
+  .af-auth2-hero p{
+    max-width:355px !important;
+    margin-top:15px !important;
+    font-size:12px !important;
+    line-height:1.6 !important;
+    color:#aab8cc !important;
+  }
+
+  .af-auth2-features{
+    display:none !important;
+  }
+
+  .af-auth2-security{
+    display:none !important;
+  }
+
+  /* LOGIN AREA */
+  .af-auth2-panel{
+    position:relative !important;
+    width:100% !important;
+    min-height:auto !important;
+    display:flex !important;
+    align-items:flex-start !important;
+    justify-content:center !important;
+
+    padding:0 14px 32px !important;
+
+    background:
+      radial-gradient(
+        circle at 50% 0,
+        rgba(37,99,235,.065),
+        transparent 34%
+      ),
+      #f4f7fc !important;
+
+    overflow:visible !important;
+  }
+
+  .af-auth2-panel::before,
+  .af-auth2-panel::after{
+    display:none !important;
+  }
+
+  .af-auth2-card{
+    position:relative !important;
+    z-index:5 !important;
+
+    width:100% !important;
+    max-width:430px !important;
+
+    margin:-48px auto 0 !important;
+    transform:none !important;
+
+    padding:28px 22px 23px !important;
+
+    border:1px solid rgba(226,232,240,.94) !important;
+    border-radius:23px !important;
+
+    background:#ffffff !important;
+
+    box-shadow:
+      0 28px 70px rgba(15,23,42,.14),
+      0 8px 22px rgba(37,99,235,.08) !important;
+  }
+
+  /* Brand already visible in hero */
+  .af-auth2-mobile-brand{
+    display:none !important;
+  }
+
+  .af-auth2-heading{
+    margin-bottom:21px !important;
+  }
+
+  .af-auth2-secure-label{
+    margin-bottom:10px !important;
+    font-size:9px !important;
+  }
+
+  .af-auth2-heading h2{
+    font-size:29px !important;
+    line-height:1.1 !important;
+    letter-spacing:-1.1px !important;
+  }
+
+  .af-auth2-heading p{
+    margin-top:8px !important;
+    font-size:13px !important;
+    line-height:1.5 !important;
+  }
+
+  .af-auth2-google{
+    width:100% !important;
+    min-height:48px !important;
+  }
+
+  .af-auth2-google > div,
+  .af-auth2-google iframe{
+    width:100% !important;
+    max-width:100% !important;
+  }
+
+  .af-auth2-divider{
+    margin:18px 0 !important;
+  }
+
+  .af-auth2-form{
+    gap:14px !important;
+  }
+
+  .af-auth2-form input{
+    width:100% !important;
+    height:50px !important;
+    font-size:14px !important;
+    border-radius:11px !important;
+  }
+
+  .af-auth2-submit{
+    width:100% !important;
+    min-height:51px !important;
+    border-radius:11px !important;
+
+    background:
+      linear-gradient(
+        135deg,
+        #087cff 0%,
+        #3158e8 55%,
+        #563be5 100%
+      ) !important;
+
+    box-shadow:
+      0 11px 25px rgba(37,99,235,.25) !important;
+  }
+
+  .af-auth2-switch{
+    margin-top:19px !important;
+  }
+
+  .af-auth2-trust{
+    margin-top:18px !important;
+    padding-top:16px !important;
+  }
+
+  .af-auth2-signature{
+    margin-top:13px !important;
+  }
+}
+
+/* SMALL PHONE */
+@media (max-width:420px){
+
+  .af-auth2-visual{
+    min-height:290px !important;
+    padding:22px 17px 68px !important;
+  }
+
+  .af-auth2-hero{
+    margin-top:25px !important;
+  }
+
+  .af-auth2-hero h1{
+    font-size:31px !important;
+    max-width:300px !important;
+  }
+
+  .af-auth2-hero p{
+    font-size:11px !important;
+  }
+
+  .af-auth2-card{
+    width:100% !important;
+    margin-top:-44px !important;
+    padding:25px 19px 21px !important;
+    border-radius:21px !important;
+  }
+
+  .af-auth2-heading h2{
+    font-size:27px !important;
+  }
+}
+
+
+/* =========================================================
+   AUTOFLOW PHONE DESKTOP-SITE FINAL FIX
+   Normal mobile + laptop remain unchanged
+========================================================= */
+@media (min-width:901px) and (max-width:1180px)
+       and (hover:none) and (pointer:coarse){
+
+  .af-auth2{
+    width:100% !important;
+    min-height:100vh !important;
+    height:100vh !important;
+
+    display:grid !important;
+    grid-template-columns:46% 54% !important;
+    grid-template-rows:1fr !important;
+
+    background:#f6f8fc !important;
+    overflow:hidden !important;
+  }
+
+  /* LEFT PREMIUM PANEL */
+  .af-auth2-visual{
+    display:flex !important;
+    width:100% !important;
+    height:100vh !important;
+    min-height:100vh !important;
+
+    flex-direction:column !important;
+    justify-content:space-between !important;
+
+    padding:32px 34px 28px !important;
+
+    background:
+      radial-gradient(
+        circle at 10% 10%,
+        rgba(37,99,235,.30),
+        transparent 32%
+      ),
+      radial-gradient(
+        circle at 90% 72%,
+        rgba(14,165,233,.10),
+        transparent 36%
+      ),
+      linear-gradient(
+        145deg,
+        #061225 0%,
+        #081a34 50%,
+        #06223d 100%
+      ) !important;
+
+    overflow:hidden !important;
+  }
+
+  .af-auth2-brand{
+    display:flex !important;
+  }
+
+  .af-auth2-logo{
+    width:43px !important;
+    height:43px !important;
+  }
+
+  .af-auth2-brand strong{
+    font-size:17px !important;
+  }
+
+  .af-auth2-brand span{
+    font-size:9px !important;
+  }
+
+  .af-auth2-hero{
+    display:block !important;
+    width:100% !important;
+    max-width:420px !important;
+    margin:auto 0 !important;
+  }
+
+  .af-auth2-kicker{
+    display:flex !important;
+    margin-bottom:16px !important;
+    font-size:8px !important;
+    padding:6px 9px !important;
+  }
+
+  .af-auth2-hero h1{
+    max-width:410px !important;
+    font-size:38px !important;
+    line-height:1.04 !important;
+    letter-spacing:-1.8px !important;
+  }
+
+  .af-auth2-hero p{
+    display:block !important;
+    max-width:400px !important;
+    margin-top:17px !important;
+    font-size:11px !important;
+    line-height:1.65 !important;
+  }
+
+  .af-auth2-features{
+    display:grid !important;
+    gap:8px !important;
+    margin-top:22px !important;
+  }
+
+  .af-auth2-features > div{
+    min-width:0 !important;
+    width:100% !important;
+    max-width:330px !important;
+    padding:8px 11px !important;
+    font-size:9px !important;
+  }
+
+  .af-auth2-features svg{
+    width:15px !important;
+    height:15px !important;
+  }
+
+  .af-auth2-security{
+    display:flex !important;
+    font-size:7px !important;
+    gap:7px !important;
+  }
+
+  /* RIGHT LOGIN PANEL */
+  .af-auth2-panel{
+    position:relative !important;
+    width:100% !important;
+    height:100vh !important;
+    min-height:100vh !important;
+
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+
+    padding:24px 30px !important;
+
+    background:
+      radial-gradient(
+        circle at 90% 5%,
+        rgba(37,99,235,.07),
+        transparent 30%
+      ),
+      #f7f9fc !important;
+
+    overflow:hidden !important;
+  }
+
+  .af-auth2-panel::before,
+  .af-auth2-panel::after{
+    display:none !important;
+  }
+
+  .af-auth2-card{
+    width:100% !important;
+    max-width:430px !important;
+
+    margin:0 !important;
+    transform:none !important;
+
+    padding:30px 30px 24px !important;
+
+    border:1px solid #e3e8f0 !important;
+    border-radius:24px !important;
+
+    background:#fff !important;
+
+    box-shadow:
+      0 28px 70px rgba(15,23,42,.11),
+      0 8px 24px rgba(15,23,42,.045) !important;
+  }
+
+  .af-auth2-mobile-brand{
+    display:none !important;
+  }
+
+  .af-auth2-heading{
+    margin-bottom:19px !important;
+  }
+
+  .af-auth2-heading h2{
+    font-size:28px !important;
+  }
+
+  .af-auth2-heading p{
+    font-size:11px !important;
+  }
+
+  .af-auth2-google{
+    min-height:44px !important;
+  }
+
+  .af-auth2-divider{
+    margin:16px 0 !important;
+  }
+
+  .af-auth2-form{
+    gap:12px !important;
+  }
+
+  .af-auth2-form input{
+    height:46px !important;
+    font-size:12px !important;
+  }
+
+  .af-auth2-submit{
+    min-height:47px !important;
+    font-size:12px !important;
+  }
+
+  .af-auth2-switch{
+    margin-top:16px !important;
+    font-size:10px !important;
+  }
+
+  .af-auth2-trust{
+    margin-top:15px !important;
+    padding-top:13px !important;
+    font-size:8px !important;
+  }
+
+  .af-auth2-signature{
+    margin-top:10px !important;
+    font-size:8px !important;
+  }
+}
+
+
+/* AUTOFLOW LOGIN HARD ZOOM LOCK */
+.af-auth2,
+.af-auth2 *{
+  touch-action:pan-x pan-y !important;
+}
+
+.af-auth2 input,
+.af-auth2 button,
+.af-auth2 a{
+  touch-action:manipulation !important;
+}

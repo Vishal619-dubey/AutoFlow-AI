@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import {
   ArrowRight,
@@ -22,6 +22,36 @@ export default function AuthPage({ mode }) {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    const blockPinch = (event) => {
+      if (event.touches && event.touches.length > 1) {
+        event.preventDefault();
+      }
+    };
+
+    const blockGesture = (event) => {
+      event.preventDefault();
+    };
+
+    document.addEventListener("touchmove", blockPinch, {
+      passive: false,
+    });
+
+    document.addEventListener("gesturestart", blockGesture, {
+      passive: false,
+    });
+
+    document.addEventListener("gesturechange", blockGesture, {
+      passive: false,
+    });
+
+    return () => {
+      document.removeEventListener("touchmove", blockPinch);
+      document.removeEventListener("gesturestart", blockGesture);
+      document.removeEventListener("gesturechange", blockGesture);
+    };
+  }, []);
 
   const [form, setForm] = useState({
     name: "",
@@ -357,6 +387,11 @@ export default function AuthPage({ mode }) {
           <div className="af-auth2-trust">
             <ShieldCheck size={15} />
             Authentication protected by AutoFlow Security
+          </div>
+
+          <div className="af-auth2-signature">
+            <span />
+            Built by <strong>Vishal Dubey</strong>
           </div>
         </div>
       </section>
