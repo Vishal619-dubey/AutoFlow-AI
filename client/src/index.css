@@ -1249,3 +1249,1118 @@
     justify-content: center;
   }
 }
+
+/* AUTOFLOW RESPONSIVE HARDENING 2026-09-25 */
+html,body,#root{width:100%;max-width:100%;overflow-x:hidden}
+.flow-app,.flow-main,.flow-content,.flow-card,.flow-grid-main{min-width:0}
+
+@media (max-width:1024px),
+       (max-width:1180px) and (hover:none) and (pointer:coarse){
+
+  .flow-sidebar{
+    width:min(300px,86vw);
+    transform:translateX(-105%);
+    transition:transform .25s ease;
+    box-shadow:24px 0 70px rgba(0,0,0,.45);
+  }
+
+  .flow-sidebar.is-open{transform:translateX(0)}
+  .flow-mobile-close{display:grid;place-items:center}
+
+  .flow-overlay{
+    display:block;
+    position:fixed;
+    inset:0;
+    z-index:25;
+    border:0;
+    background:rgba(2,5,12,.68);
+    backdrop-filter:blur(3px);
+  }
+
+  .flow-main{
+    width:100%;
+    margin-left:0;
+  }
+
+  .flow-topbar{
+    height:64px;
+    padding:0 16px;
+    gap:10px;
+  }
+
+  .flow-menu{
+    display:grid;
+    place-items:center;
+    width:40px;
+    height:40px;
+    flex:0 0 40px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:#0f1420;
+  }
+
+  .flow-search{
+    min-width:0;
+    max-width:none;
+  }
+
+  .flow-search kbd,
+  .flow-ai-pill,
+  .flow-user{
+    display:none;
+  }
+
+  .flow-content{
+    width:100%;
+    padding:24px 18px 36px;
+    max-width:1180px;
+  }
+
+  .flow-page-head{
+    align-items:flex-start;
+    gap:16px;
+  }
+
+  .flow-metrics{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+
+  .flow-grid-main,
+  .flow-grid-main.bottom,
+  .flow-approval-layout,
+  .flow-insight-grid,
+  .flow-settings-grid{
+    grid-template-columns:1fr;
+  }
+
+  .flow-policy{display:none}
+
+  .flow-table-wrap{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .flow-profile-trigger{padding:4px}
+  .flow-profile-chevron{display:none}
+
+  .flow-notification-menu{
+    position:fixed;
+    top:64px;
+    left:12px;
+    right:12px;
+    width:auto;
+    max-width:520px;
+    margin-left:auto;
+  }
+
+  .flow-profile-menu{
+    position:fixed;
+    top:64px;
+    right:12px;
+    width:min(320px,calc(100vw - 24px));
+  }
+}
+
+@media (max-width:640px){
+
+  .flow-topbar{
+    height:60px;
+    padding:0 12px;
+    gap:8px;
+  }
+
+  .flow-search{
+    flex:0 0 40px;
+    width:40px;
+    justify-content:center;
+    padding:0;
+  }
+
+  .flow-search>span,
+  .flow-search kbd{
+    display:none;
+  }
+
+  .flow-content{
+    padding:18px 12px 30px;
+  }
+
+  .flow-page-head{
+    flex-direction:column;
+    gap:14px;
+    margin-bottom:18px;
+  }
+
+  .flow-page-head>div,
+  .flow-page-head .flow-primary{
+    width:100%;
+  }
+
+  .flow-page-head h1{
+    font-size:24px;
+    line-height:1.15;
+  }
+
+  .flow-page-head p{
+    font-size:12px;
+    line-height:1.55;
+  }
+
+  .flow-metrics{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .flow-metric{
+    min-height:100px;
+    padding:14px;
+  }
+
+  .flow-card{
+    padding:15px;
+    border-radius:14px;
+  }
+
+  .flow-toolbar{
+    flex-wrap:wrap;
+  }
+
+  .flow-toolbar .flow-input{
+    min-width:100%;
+    max-width:none;
+  }
+
+  .flow-table{
+    min-width:680px;
+  }
+
+  .flow-notification-menu{
+    top:58px;
+    left:8px;
+    right:8px;
+  }
+
+  .flow-profile-menu{
+    top:58px;
+    right:8px;
+    width:calc(100vw - 16px);
+  }
+}
+
+/* Mobile browser Desktop Site mode */
+@media (min-width:761px) and (max-width:1180px)
+       and (hover:none) and (pointer:coarse){
+
+  .flow-content{padding:30px 26px 40px}
+
+  .flow-page-head h1{font-size:34px}
+  .flow-page-head p{font-size:15px;line-height:1.6}
+
+  .flow-metric{
+    min-height:138px;
+    padding:20px;
+  }
+
+  .flow-metric strong{font-size:30px}
+  .flow-card h2,.flow-card-head h2{font-size:17px}
+  .flow-table td{font-size:12px}
+}
+
+
+/* AUTOFLOW MOBILE DOCUMENT ACTIONS 2026-09-25 */
+@media (max-width:640px){
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap{
+    margin:14px 0 0;
+    overflow:visible;
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table{
+    display:block;
+    width:100%;
+    min-width:0;
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table thead{
+    display:none;
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table tbody{
+    display:grid;
+    gap:12px;
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table tr{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:12px 16px;
+    padding:14px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:#0d1320;
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table td{
+    display:block;
+    min-width:0;
+    padding:0;
+    border:0;
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table td:nth-child(1){
+    grid-column:1 / -1;
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table td:nth-child(2)::before{
+    content:"CLASSIFICATION";
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table td:nth-child(3)::before{
+    content:"PRIORITY";
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table td:nth-child(4)::before{
+    content:"STATUS";
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table td:nth-child(5)::before{
+    content:"AI SCORE";
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table td:nth-child(2)::before,
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table td:nth-child(3)::before,
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table td:nth-child(4)::before,
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table td:nth-child(5)::before{
+    display:block;
+    margin-bottom:6px;
+    color:#647188;
+    font-size:8px;
+    font-weight:800;
+    letter-spacing:.11em;
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-table td:nth-child(6){
+    grid-column:1 / -1;
+    padding-top:12px;
+    border-top:1px solid var(--line);
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-row-actions{
+    display:flex;
+    width:100%;
+    gap:8px;
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-row-actions .flow-icon-btn{
+    flex:1;
+    width:auto;
+    min-width:42px;
+    height:42px;
+    border-radius:10px;
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap
+  .flow-row-actions .flow-icon-btn[title="Download securely"]{
+    color:#c9beff;
+    border-color:rgba(124,92,255,.42);
+    background:rgba(124,92,255,.12);
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-doc-name{
+    min-width:0;
+  }
+
+  .flow-card > .flow-toolbar ~ .flow-table-wrap .flow-doc-name b{
+    max-width:240px;
+  }
+}
+
+/* AUTOFLOW MOBILE SECURITY REGISTER 2026-09-25 */
+@media (max-width:640px){
+
+  .flow-security-table{
+    display:block;
+    width:100%;
+    min-width:0;
+  }
+
+  .flow-security-table thead{
+    display:none;
+  }
+
+  .flow-security-table tbody{
+    display:grid;
+    gap:12px;
+  }
+
+  .flow-security-table tr{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px 12px;
+    padding:14px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:#0d1320;
+  }
+
+  .flow-security-table td{
+    display:block;
+    min-width:0;
+    padding:0;
+    border:0;
+    white-space:normal !important;
+  }
+
+  .flow-security-table td:nth-child(1){
+    grid-column:1 / -1;
+  }
+
+  .flow-security-table td:nth-child(2)::before{
+    content:"ENCRYPTION";
+  }
+
+  .flow-security-table td:nth-child(3)::before{
+    content:"INTEGRITY";
+  }
+
+  .flow-security-table td:nth-child(4)::before{
+    content:"TRUST SCORE";
+  }
+
+  .flow-security-table td:nth-child(5)::before{
+    content:"PRIVACY RISK";
+  }
+
+  .flow-security-table td:nth-child(2)::before,
+  .flow-security-table td:nth-child(3)::before,
+  .flow-security-table td:nth-child(4)::before,
+  .flow-security-table td:nth-child(5)::before{
+    display:block;
+    margin-bottom:7px;
+    color:#647188;
+    font-size:8px;
+    font-weight:800;
+    letter-spacing:.11em;
+  }
+
+  .flow-security-table td:nth-child(4),
+  .flow-security-table td:nth-child(5){
+    grid-column:1 / -1;
+  }
+
+  .flow-security-table td:nth-child(6){
+    grid-column:1 / -1;
+    padding-top:12px;
+    border-top:1px solid var(--line);
+  }
+
+  .flow-security-table .flow-risk-score{
+    width:100%;
+    max-width:280px;
+    grid-template-columns:minmax(100px,1fr) auto;
+    gap:10px;
+  }
+
+  .flow-security-table .flow-risk-score:before{
+    width:100%;
+  }
+
+  .flow-security-table .flow-risk-score i{
+    max-width:none;
+  }
+
+  .flow-security-table .flow-risk-score span{
+    font-size:10px;
+    white-space:nowrap;
+  }
+
+  .flow-security-table td:nth-child(6)>div{
+    width:100%;
+  }
+
+  .flow-security-table td:nth-child(6) .flow-icon-btn{
+    flex:1;
+    height:42px;
+  }
+}
+
+
+/* AUTOFLOW MOBILE AUTOMATION SUMMARY FIX */
+@media (max-width:640px){
+
+  .flow-automation-summary{
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    width:100%;
+    gap:8px;
+    overflow:visible !important;
+    margin-bottom:16px;
+  }
+
+  .flow-automation-summary > div{
+    min-width:0 !important;
+    width:100%;
+    padding:12px 6px;
+    gap:6px;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+
+  .flow-automation-summary svg{
+    width:18px;
+    height:18px;
+    flex-shrink:0;
+  }
+
+  .flow-automation-summary span{
+    width:100%;
+    font-size:8px;
+    line-height:1.3;
+    text-align:center;
+  }
+
+  .flow-automation-summary b{
+    font-size:18px;
+    line-height:1.1;
+    margin-bottom:3px;
+  }
+}
+
+
+/* AUTOFLOW COMMAND CENTER MOBILE LOCK */
+@media (max-width:640px){
+
+  html,
+  body,
+  #root{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden !important;
+  }
+
+  .flow-main{
+    width:100% !important;
+    max-width:100vw !important;
+    margin-left:0 !important;
+    overflow-x:hidden !important;
+  }
+
+  .flow-content{
+    width:100% !important;
+    max-width:100% !important;
+    box-sizing:border-box;
+    overflow-x:hidden !important;
+  }
+
+  .flow-page-head,
+  .flow-metrics,
+  .flow-grid-main,
+  .flow-grid-main.bottom,
+  .flow-card,
+  .flow-activity-card{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    box-sizing:border-box;
+  }
+
+  .flow-grid-main,
+  .flow-grid-main.bottom{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) !important;
+  }
+
+  .flow-grid-main > *,
+  .flow-grid-main.bottom > *{
+    min-width:0 !important;
+    max-width:100%;
+  }
+
+  .flow-chart{
+    width:100%;
+    max-width:100%;
+    overflow:hidden;
+  }
+
+  .flow-bar-wrap{
+    min-width:0;
+  }
+
+  .flow-card-head{
+    min-width:0;
+  }
+
+  .flow-card-head > div{
+    min-width:0;
+  }
+
+  .flow-grid-main .flow-table-wrap{
+    width:100%;
+    max-width:100%;
+    margin-left:0;
+    margin-right:0;
+    overflow-x:auto;
+    overscroll-behavior-inline:contain;
+  }
+
+  .flow-grid-main .flow-table{
+    max-width:none;
+  }
+
+  .flow-inbox-item{
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
+  }
+}
+
+
+/* =====================================================
+   AUTOFLOW COMMAND CENTER FINAL MOBILE FIX
+===================================================== */
+@media (max-width:640px){
+
+  html,
+  body,
+  #root,
+  .flow-app{
+    width:100%;
+    max-width:100%;
+    min-width:0 !important;
+    overflow-x:clip !important;
+  }
+
+  .flow-app{
+    display:block;
+  }
+
+  .flow-main{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    margin-left:0 !important;
+    overflow-x:clip !important;
+  }
+
+  .flow-content{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:18px 12px !important;
+    overflow-x:clip !important;
+  }
+
+  .flow-content > *{
+    min-width:0 !important;
+    max-width:100% !important;
+  }
+
+  /* ---------- TOP BAR ---------- */
+
+  .flow-topbar{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    padding:0 12px !important;
+    gap:8px !important;
+  }
+
+  .flow-menu{
+    flex:0 0 40px;
+    width:40px;
+    height:40px;
+  }
+
+  .flow-search{
+    flex:1 1 0 !important;
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+
+  .flow-top-actions{
+    flex:0 0 auto;
+    min-width:0;
+    gap:6px;
+  }
+
+  .flow-notification-trigger{
+    width:38px;
+    height:38px;
+  }
+
+  .flow-profile-trigger{
+    width:38px;
+    min-width:38px;
+    height:38px;
+    padding:0;
+  }
+
+  /* ---------- COMMAND CENTER HEADER ---------- */
+
+  .flow-page-head{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow:hidden;
+  }
+
+  .flow-page-head > div{
+    width:100%;
+    min-width:0;
+  }
+
+  .flow-page-head h1,
+  .flow-page-head p{
+    max-width:100%;
+    overflow-wrap:anywhere;
+  }
+
+  .flow-page-head .flow-primary{
+    width:100%;
+  }
+
+  /* ---------- DASHBOARD GRID ---------- */
+
+  .flow-metrics,
+  .flow-grid-main,
+  .flow-grid-main.bottom{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+  }
+
+  .flow-grid-main,
+  .flow-grid-main.bottom{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:12px !important;
+  }
+
+  .flow-grid-main > *,
+  .flow-grid-main.bottom > *{
+    width:100%;
+    max-width:100%;
+    min-width:0 !important;
+  }
+
+  .flow-card{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    padding:15px !important;
+    overflow:hidden;
+  }
+
+  /* ---------- ACTIVITY GRAPH ---------- */
+
+  .flow-activity-card{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+  }
+
+  .flow-chart{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    height:190px;
+    overflow:hidden !important;
+  }
+
+  .flow-bar-wrap{
+    min-width:0 !important;
+    width:auto !important;
+    flex:1 1 0;
+  }
+
+  .flow-card-head{
+    width:100%;
+    min-width:0;
+    gap:8px;
+  }
+
+  .flow-card-head > div{
+    min-width:0;
+  }
+
+  .flow-card-head .flow-ghost{
+    flex-shrink:0;
+  }
+
+  /* =====================================================
+     COMMAND CENTER RECENT DOCUMENTS
+     Remove 720px desktop table width on mobile
+  ===================================================== */
+
+  .flow-grid-main.bottom .flow-table-wrap{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    margin:14px 0 0 !important;
+    overflow:visible !important;
+  }
+
+  .flow-grid-main.bottom .flow-table{
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+  }
+
+  .flow-grid-main.bottom .flow-table thead{
+    display:none;
+  }
+
+  .flow-grid-main.bottom .flow-table tbody{
+    display:grid;
+    width:100%;
+    gap:10px;
+  }
+
+  .flow-grid-main.bottom .flow-table tr{
+    display:grid;
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    grid-template-columns:1fr 1fr;
+    gap:11px 8px;
+    padding:13px;
+    border:1px solid var(--line);
+    border-radius:13px;
+    background:#0d1320;
+  }
+
+  .flow-grid-main.bottom .flow-table td{
+    display:block;
+    min-width:0 !important;
+    width:auto;
+    padding:0 !important;
+    border:0 !important;
+    white-space:normal;
+  }
+
+  .flow-grid-main.bottom .flow-table td:first-child{
+    grid-column:1 / -1;
+  }
+
+  .flow-grid-main.bottom .flow-table td:nth-child(2)::before{
+    content:"CLASSIFICATION";
+  }
+
+  .flow-grid-main.bottom .flow-table td:nth-child(3)::before{
+    content:"PRIORITY";
+  }
+
+  .flow-grid-main.bottom .flow-table td:nth-child(4)::before{
+    content:"STATUS";
+  }
+
+  .flow-grid-main.bottom .flow-table td:nth-child(5){
+    grid-column:1 / -1;
+  }
+
+  .flow-grid-main.bottom .flow-table td:nth-child(5)::before{
+    content:"AI SCORE";
+  }
+
+  .flow-grid-main.bottom .flow-table td:nth-child(2)::before,
+  .flow-grid-main.bottom .flow-table td:nth-child(3)::before,
+  .flow-grid-main.bottom .flow-table td:nth-child(4)::before,
+  .flow-grid-main.bottom .flow-table td:nth-child(5)::before{
+    display:block;
+    margin-bottom:5px;
+    color:#647188;
+    font-size:7px;
+    font-weight:800;
+    letter-spacing:.1em;
+  }
+
+  .flow-grid-main.bottom .flow-doc-name{
+    width:100%;
+    max-width:100%;
+    min-width:0 !important;
+  }
+
+  .flow-grid-main.bottom .flow-doc-name > div{
+    min-width:0;
+    flex:1;
+  }
+
+  .flow-grid-main.bottom .flow-doc-name b,
+  .flow-grid-main.bottom .flow-doc-name small{
+    display:block;
+    width:100%;
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .flow-grid-main.bottom .flow-confidence{
+    width:100%;
+    max-width:220px;
+  }
+
+  /* ---------- APPROVAL INBOX ---------- */
+
+  .flow-inbox-item{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+  }
+
+  .flow-inbox-item > div:nth-child(2){
+    min-width:0 !important;
+  }
+}
+
+
+/* AUTOFLOW AUDIT TRAIL MOBILE FIX */
+@media (max-width:640px){
+
+  .flow-audit-table{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  .flow-audit-table thead{
+    display:none;
+  }
+
+  .flow-audit-table tbody{
+    display:grid;
+    gap:12px;
+    width:100%;
+  }
+
+  .flow-audit-table tr{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    width:100%;
+    min-width:0;
+    padding:14px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:#0d1320;
+  }
+
+  .flow-audit-table td{
+    display:block;
+    min-width:0 !important;
+    max-width:100% !important;
+    padding:0 !important;
+    border:0 !important;
+    white-space:normal !important;
+    overflow-wrap:anywhere;
+  }
+
+  .flow-audit-table td:nth-child(1),
+  .flow-audit-table td:nth-child(2){
+    grid-column:1 / -1;
+  }
+
+  .flow-audit-table td:nth-child(1)::before{
+    content:"AUTOMATION";
+  }
+
+  .flow-audit-table td:nth-child(2)::before{
+    content:"DOCUMENT";
+  }
+
+  .flow-audit-table td:nth-child(3)::before{
+    content:"TRIGGER";
+  }
+
+  .flow-audit-table td:nth-child(4)::before{
+    content:"ACTION";
+  }
+
+  .flow-audit-table td:nth-child(5)::before{
+    content:"STATUS";
+  }
+
+  .flow-audit-table td:nth-child(6)::before{
+    content:"EXECUTED";
+  }
+
+  .flow-audit-table td::before{
+    display:block;
+    margin-bottom:5px;
+    color:#647188;
+    font-size:7px;
+    font-weight:800;
+    letter-spacing:.1em;
+  }
+
+  .flow-audit-table td:nth-child(5),
+  .flow-audit-table td:nth-child(6){
+    grid-column:1 / -1;
+  }
+
+  .flow-audit-table td:nth-child(2){
+    max-width:100% !important;
+    overflow:visible !important;
+    text-overflow:initial !important;
+  }
+
+  .flow-audit-table .flow-badge{
+    max-width:100%;
+  }
+
+  .flow-card:has(.flow-audit-table) .flow-table-wrap{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    margin:14px 0 0 !important;
+    overflow:visible !important;
+  }
+
+  .flow-card:has(.flow-audit-table) .flow-card-head{
+    align-items:flex-start;
+    flex-wrap:wrap;
+  }
+
+  .flow-card:has(.flow-audit-table) .flow-card-head .flow-ghost{
+    flex-shrink:0;
+  }
+}
+
+
+/* AUTOFLOW TRASH MOBILE FIX */
+@media (max-width:640px){
+
+  .flow-trash-table{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  .flow-trash-table thead{
+    display:none;
+  }
+
+  .flow-trash-table tbody{
+    display:grid;
+    gap:12px;
+    width:100%;
+  }
+
+  .flow-trash-table tr{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:13px 10px;
+    width:100%;
+    min-width:0;
+    padding:14px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:#0d1320;
+  }
+
+  .flow-trash-table td{
+    display:block;
+    min-width:0 !important;
+    max-width:100% !important;
+    padding:0 !important;
+    border:0 !important;
+    white-space:normal !important;
+    overflow-wrap:anywhere;
+  }
+
+  .flow-trash-table td:nth-child(1){
+    grid-column:1 / -1;
+  }
+
+  .flow-trash-table td:nth-child(2)::before{
+    content:"CLASSIFICATION";
+  }
+
+  .flow-trash-table td:nth-child(3)::before{
+    content:"PRIORITY";
+  }
+
+  .flow-trash-table td:nth-child(4)::before{
+    content:"DELETED";
+  }
+
+  .flow-trash-table td:nth-child(2)::before,
+  .flow-trash-table td:nth-child(3)::before,
+  .flow-trash-table td:nth-child(4)::before{
+    display:block;
+    margin-bottom:6px;
+    color:#647188;
+    font-size:7px;
+    font-weight:800;
+    letter-spacing:.1em;
+  }
+
+  .flow-trash-table td:nth-child(4){
+    grid-column:1 / -1;
+  }
+
+  .flow-trash-table td:nth-child(5){
+    grid-column:1 / -1;
+    padding-top:12px !important;
+    border-top:1px solid var(--line) !important;
+  }
+
+  .flow-trash-table .flow-row-actions{
+    display:grid !important;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    width:100%;
+  }
+
+  .flow-trash-table .flow-restore-btn,
+  .flow-trash-table .flow-delete-forever{
+    width:100%;
+    min-width:0;
+    height:42px;
+    justify-content:center;
+    padding:0 8px;
+    font-size:9px;
+  }
+
+  .flow-trash-table .flow-restore-btn svg,
+  .flow-trash-table .flow-delete-forever svg{
+    flex-shrink:0;
+    width:15px;
+    height:15px;
+  }
+
+  .flow-trash-table .flow-doc-name{
+    width:100%;
+    min-width:0 !important;
+  }
+
+  .flow-trash-table .flow-doc-name > div{
+    flex:1;
+    min-width:0;
+  }
+
+  .flow-trash-table .flow-doc-name b,
+  .flow-trash-table .flow-doc-name small{
+    max-width:100%;
+  }
+}
+
+
+/* AUTOFLOW STATIC MOBILE VIEW */
+html,
+body,
+#root{
+  touch-action:manipulation;
+  overscroll-behavior-x:none;
+}
+
+body{
+  overflow-x:hidden;
+}
+

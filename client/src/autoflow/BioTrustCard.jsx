@@ -13,6 +13,7 @@ import API from "../services/api";
 
 export default function BioTrustCard() {
   const videoRef = useRef(null);
+  const mobileCameraRef = useRef(null);
   const streamRef = useRef(null);
 
   const [status, setStatus] = useState({
@@ -85,6 +86,15 @@ export default function BioTrustCard() {
   };
 
   const openCamera = async (nextMode) => {
+    if (
+      !window.isSecureContext ||
+      !navigator.mediaDevices?.getUserMedia
+    ) {
+      setMode(nextMode);
+      mobileCameraRef.current?.click();
+      return;
+    }
+
     try {
       stopCamera();
 
@@ -129,10 +139,63 @@ export default function BioTrustCard() {
           "No camera was found on this device."
         );
       } else {
-        toast.error(
-          "Unable to open camera."
+        console.warn(
+          "Live camera unavailable, using native camera fallback:",
+          error.name,
+          error.message
         );
+
+        setMode(nextMode);
+        mobileCameraRef.current?.click();
       }
+    }
+  };
+
+  const submitCapturedFile = async (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    try {
+      setProcessing(true);
+
+      const body = new FormData();
+
+      body.append(
+        "face",
+        file,
+        file.name || "biotrust-mobile.jpg"
+      );
+
+      const endpoint =
+        mode === "enroll"
+          ? "/biometric/enroll"
+          : "/biometric/verify";
+
+      const { data } =
+        await API.post(endpoint, body);
+
+      toast.success(
+        data.message ||
+          (mode === "enroll"
+            ? "Face enrolled successfully"
+            : "Identity verified")
+      );
+
+      await loadStatus();
+    } catch (error) {
+      console.error(
+        "BioTrust mobile capture error:",
+        error
+      );
+
+      toast.error(
+        error.response?.data?.message ||
+          "BioTrust operation failed"
+      );
+    } finally {
+      event.target.value = "";
+      setProcessing(false);
     }
   };
 
@@ -311,6 +374,15 @@ export default function BioTrustCard() {
 
   return (
     <>
+      <input
+        ref={mobileCameraRef}
+        type="file"
+        accept="image/jpeg,image/png"
+        capture="user"
+        hidden
+        onChange={submitCapturedFile}
+      />
+
       <section className="flow-card biotrust-card">
         <div className="biotrust-head">
           <div className="biotrust-icon">
