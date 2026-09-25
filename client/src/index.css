@@ -1174,3 +1174,78 @@
     font-size: 9.5px;
   }
 }
+
+/* Documents drag-drop and filters */
+.flow-dropzone {
+  transition:
+    border-color .2s ease,
+    background .2s ease,
+    transform .2s ease,
+    box-shadow .2s ease;
+}
+
+.flow-dropzone.is-dragging {
+  border-color: #8f7cff;
+  background: rgba(124, 92, 255, .12);
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, .08);
+  transform: translateY(-2px);
+}
+
+.flow-ghost.active {
+  border-color: rgba(124, 92, 255, .55);
+  background: rgba(124, 92, 255, .12);
+  color: #c7bcff;
+}
+
+.flow-filter-panel {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px;
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #0d131f;
+}
+
+.flow-filter-panel label {
+  margin: 0;
+  min-width: 160px;
+  gap: 6px;
+}
+
+.flow-filter-panel label > span {
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.flow-filter-panel select {
+  height: 37px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #111827;
+  color: #dce3f0;
+  padding: 0 10px;
+  outline: none;
+}
+
+.flow-filter-panel select:focus {
+  border-color: rgba(124, 92, 255, .65);
+}
+
+@media (max-width: 700px) {
+  .flow-filter-panel {
+    align-items: stretch;
+  }
+
+  .flow-filter-panel label {
+    width: 100%;
+  }
+
+  .flow-filter-panel .flow-ghost {
+    width: 100%;
+    justify-content: center;
+  }
+}

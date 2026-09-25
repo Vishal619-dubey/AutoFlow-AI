@@ -492,19 +492,322 @@ export function DocumentsPage() {
   const [documents, setDocuments] = useState([]);
   const [query, setQuery] = useState("");
   const [uploading, setUploading] = useState(false);
-  const load = async () => { try { const response = await API.get("/documents"); setDocuments(response.data); } catch { toast.error("Unable to load documents"); } };
+  const [dragging, setDragging] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+
+  const load = async () => {
+    try {
+      const response = await API.get("/documents");
+      setDocuments(response.data);
+    } catch {
+      toast.error("Unable to load documents");
+    }
+  };
+
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, []);
+
   useEffect(() => {
-    if (searchParams.has("upload")) window.setTimeout(() => inputRef.current?.click(), 120);
+    if (searchParams.has("upload")) {
+      window.setTimeout(() => inputRef.current?.click(), 120);
+    }
   }, [searchParams]);
-  const upload = async (file) => { if (!file) return; const body = new FormData(); body.append("file", file); try { setUploading(true); await API.post("/upload", body); toast.success("Uploaded and automatically classified"); await load(); } catch (error) { toast.error(error.response?.data?.message || "Upload failed"); } finally { setUploading(false); } };
-  const shown = useMemo(() => documents.filter((doc) => doc.filename.toLowerCase().includes(query.toLowerCase())), [documents, query]);
-  return <><PageHeader eyebrow="INTELLIGENT DOCUMENT HUB" title="Documents" description="Every upload is classified, prioritized and routed by the automation engine." action={<><input ref={inputRef} hidden type="file" onChange={(e) => upload(e.target.files[0])} /><button className="flow-primary" onClick={() => inputRef.current?.click()} disabled={uploading}><Upload size={18} />{uploading ? "Processing..." : "Upload document"}</button></>} />
-    <div className="flow-dropzone" onClick={() => inputRef.current?.click()}><div><Upload /><b>Drop a document to start an automation</b><span>PDF, DOCX, XLSX, PPTX, images and text up to 100 MB</span></div><div className="flow-steps"><span><i>1</i>Extract</span><ChevronRight /><span><i>2</i>Classify</span><ChevronRight /><span><i>3</i>Route</span></div></div>
-    <div className="flow-card"><div className="flow-toolbar"><div className="flow-input"><Search /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search document hub..." /></div><button className="flow-ghost"><Filter size={16} /> Filters</button><span>{shown.length} documents</span></div><DocumentTable documents={shown} onRefresh={load} /></div></>;
+
+  const upload = async (file) => {
+    if (!file || uploading) return;
+
+    const body = new FormData();
+    body.append("file", file);
+
+    try {
+      setUploading(true);
+      await API.post("/upload", body);
+      toast.success("Uploaded and automatically classified");
+      await load();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Upload failed"
+      );
+    } finally {
+      setUploading(false);
+      setDragging(false);
+
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    setDragging(true);
+  };
+
+  const handleDragLeave = (event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      setDragging(false);
+    }
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    setDragging(false);
+
+    const file = event.dataTransfer.files?.[0];
+
+    if (file) {
+      upload(file);
+    }
+  };
+
+  const shown = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    return documents.filter((doc) => {
+      const matchesSearch =
+        !normalizedQuery ||
+        String(doc.filename || "")
+          .toLowerCase()
+          .includes(normalizedQuery);
+
+      const matchesType =
+        typeFilter === "all" ||
+        String(doc.fileType || "").toLowerCase() ===
+          typeFilter;
+
+      const matchesPriority =
+        priorityFilter === "all" ||
+        String(doc.priority || "").toLowerCase() ===
+          priorityFilter;
+
+      return (
+        matchesSearch &&
+        matchesType &&
+        matchesPriority
+      );
+    });
+  }, [
+    documents,
+    query,
+    typeFilter,
+    priorityFilter,
+  ]);
+
+  const clearFilters = () => {
+    setTypeFilter("all");
+    setPriorityFilter("all");
+  };
+
+  const filtersActive =
+    typeFilter !== "all" ||
+    priorityFilter !== "all";
+
+  return (
+    <>
+      <PageHeader
+        eyebrow="INTELLIGENT DOCUMENT HUB"
+        title="Documents"
+        description="Every upload is classified, prioritized and routed by the automation engine."
+        action={
+          <>
+            <input
+              ref={inputRef}
+              hidden
+              type="file"
+              onChange={(event) =>
+                upload(event.target.files?.[0])
+              }
+            />
+
+            <button
+              className="flow-primary"
+              onClick={() =>
+                inputRef.current?.click()
+              }
+              disabled={uploading}
+            >
+              <Upload size={18} />
+              {uploading
+                ? "Processing..."
+                : "Upload document"}
+            </button>
+          </>
+        }
+      />
+
+      <div
+        className={`flow-dropzone ${
+          dragging ? "is-dragging" : ""
+        }`}
+        onClick={() =>
+          !uploading &&
+          inputRef.current?.click()
+        }
+        onDragEnter={handleDragOver}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <div>
+          <Upload />
+
+          <b>
+            {dragging
+              ? "Release to upload document"
+              : "Drop a document to start an automation"}
+          </b>
+
+          <span>
+            PDF, DOCX, XLSX, PPTX, images and
+            text up to 100 MB
+          </span>
+        </div>
+
+        <div className="flow-steps">
+          <span>
+            <i>1</i>Extract
+          </span>
+
+          <ChevronRight />
+
+          <span>
+            <i>2</i>Classify
+          </span>
+
+          <ChevronRight />
+
+          <span>
+            <i>3</i>Route
+          </span>
+        </div>
+      </div>
+
+      <div className="flow-card">
+        <div className="flow-toolbar">
+          <div className="flow-input">
+            <Search />
+
+            <input
+              value={query}
+              onChange={(event) =>
+                setQuery(event.target.value)
+              }
+              placeholder="Search document hub..."
+            />
+          </div>
+
+          <button
+            className={`flow-ghost ${
+              filtersActive ? "active" : ""
+            }`}
+            onClick={() =>
+              setFiltersOpen(
+                (current) => !current
+              )
+            }
+          >
+            <Filter size={16} />
+            Filters
+          </button>
+
+          <span>
+            {shown.length} documents
+          </span>
+        </div>
+
+        {filtersOpen && (
+          <div className="flow-filter-panel">
+            <label>
+              <span>File type</span>
+
+              <select
+                value={typeFilter}
+                onChange={(event) =>
+                  setTypeFilter(
+                    event.target.value
+                  )
+                }
+              >
+                <option value="all">
+                  All types
+                </option>
+                <option value="pdf">PDF</option>
+                <option value="docx">
+                  Word
+                </option>
+                <option value="xlsx">
+                  Excel
+                </option>
+                <option value="pptx">
+                  PowerPoint
+                </option>
+                <option value="image">
+                  Images
+                </option>
+                <option value="txt">
+                  Text
+                </option>
+                <option value="audio">
+                  Audio
+                </option>
+                <option value="video">
+                  Video
+                </option>
+              </select>
+            </label>
+
+            <label>
+              <span>Priority</span>
+
+              <select
+                value={priorityFilter}
+                onChange={(event) =>
+                  setPriorityFilter(
+                    event.target.value
+                  )
+                }
+              >
+                <option value="all">
+                  All priorities
+                </option>
+                <option value="critical">
+                  Critical
+                </option>
+                <option value="high">
+                  High
+                </option>
+                <option value="medium">
+                  Medium
+                </option>
+                <option value="low">
+                  Low
+                </option>
+              </select>
+            </label>
+
+            {filtersActive && (
+              <button
+                className="flow-ghost"
+                onClick={clearFilters}
+              >
+                <X size={15} />
+                Clear filters
+              </button>
+            )}
+          </div>
+        )}
+
+        <DocumentTable
+          documents={shown}
+          onRefresh={load}
+        />
+      </div>
+    </>
+  );
 }
 
 export function AutomationsPage() {
