@@ -8,6 +8,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#070a12" />
 
+    <script>
+      try { document.documentElement.dataset.theme = localStorage.getItem("autoflow_theme") === "light" ? "light" : "dark"; }
+      catch { document.documentElement.dataset.theme = "dark"; }
+    </script>
     <title>AutoFlow AI — Intelligent Document Automation</title>
 
     <meta
