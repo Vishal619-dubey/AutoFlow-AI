@@ -19,71 +19,37 @@ const {
   documentExists,
 } = require("../services/s3StorageService");
 
-const {
-  recordSecurityEvent,
-} = require("../services/securityEventService");
-const {
-  verifyBiometricProof,
-} = require("../services/biometricProofService");
+const { recordSecurityEvent } = require("../services/securityEventService");
+const { verifyBiometricProof } = require("../services/biometricProofService");
 
 const router = express.Router();
-/* =====================================
-   BioTrust risk policy
-===================================== */
 
 function requiresBioTrust(document) {
-  const priority =
-    String(document?.priority || "")
-      .toLowerCase();
+  const priority = String(document?.priority || "").toLowerCase();
 
-  const sensitiveData =
-    document?.sensitiveData || {};
+  const sensitiveData = document?.sensitiveData || {};
 
-  const privacyRisk =
-    String(
-      sensitiveData.riskLevel || ""
-    ).toLowerCase();
+  const privacyRisk = String(sensitiveData.riskLevel || "").toLowerCase();
 
-  const totalFindings =
-    Number(
-      sensitiveData.totalFindings || 0
-    );
+  const totalFindings = Number(sensitiveData.totalFindings || 0);
 
-  const highPriority =
-    priority === "high" ||
-    priority === "critical";
+  const highPriority = priority === "high" || priority === "critical";
 
   const sensitivePrivacyRisk =
-    privacyRisk === "medium" ||
-    privacyRisk === "high" ||
-    privacyRisk === "critical";
+    privacyRisk === "medium" || privacyRisk === "high" || privacyRisk === "critical";
 
-  const sensitiveFindings =
-    totalFindings > 0;
+  const sensitiveFindings = totalFindings > 0;
 
-  return (
-    highPriority ||
-    sensitivePrivacyRisk ||
-    sensitiveFindings
-  );
+  return highPriority || sensitivePrivacyRisk || sensitiveFindings;
 }
 
-
 router.use(protect);
-
-/* =====================================
-   Ownership helper
-===================================== */
 
 const owned = (req, extra = {}) => ({
   _id: req.params.id,
   uploadedBy: req.user._id,
   ...extra,
 });
-
-/* =====================================
-   Mark missing document
-===================================== */
 
 async function markDocumentMissing(document) {
   document.storageStatus = "missing";
@@ -99,16 +65,7 @@ async function markDocumentMissing(document) {
   await document.save();
 }
 
-/* =====================================
-   Load encrypted file
-   Supports S3 + legacy local storage
-===================================== */
-
 async function loadEncryptedDocument(document) {
-  /* -----------------------------
-     New AWS S3 documents
-  ----------------------------- */
-
   if (document.storageProvider === "s3") {
     if (!document.s3Key) {
       await markDocumentMissing(document);
@@ -119,24 +76,18 @@ async function loadEncryptedDocument(document) {
       };
     }
 
-    const exists = await documentExists(
-      document.s3Key
-    );
+    const exists = await documentExists(document.s3Key);
 
     if (!exists) {
       await markDocumentMissing(document);
 
       return {
         available: false,
-        reason:
-          "Stored S3 file is unavailable",
+        reason: "Stored S3 file is unavailable",
       };
     }
 
-    const encryptedBuffer =
-      await getDocumentBuffer(
-        document.s3Key
-      );
+    const encryptedBuffer = await getDocumentBuffer(document.s3Key);
 
     return {
       available: true,
@@ -145,20 +96,12 @@ async function loadEncryptedDocument(document) {
     };
   }
 
-  /* -----------------------------
-     Legacy Render/local documents
-  ----------------------------- */
-
-  if (
-    !document.filepath ||
-    !fs.existsSync(document.filepath)
-  ) {
+  if (!document.filepath || !fs.existsSync(document.filepath)) {
     await markDocumentMissing(document);
 
     return {
       available: false,
-      reason:
-        "Legacy local file is unavailable",
+      reason: "Legacy local file is unavailable",
     };
   }
 
@@ -169,53 +112,25 @@ async function loadEncryptedDocument(document) {
   };
 }
 
-/* =====================================
-   Integrity verification
-===================================== */
-
-function verifyLoadedDocument(
-  document,
-  loaded
-) {
+function verifyLoadedDocument(document, loaded) {
   if (loaded.provider === "s3") {
-    return verifyDocumentIntegrityBuffer(
-      document,
-      loaded.encryptedBuffer
-    );
+    return verifyDocumentIntegrityBuffer(document, loaded.encryptedBuffer);
   }
 
-  return verifyDocumentIntegrity(
-    document
-  );
+  return verifyDocumentIntegrity(document);
 }
-
-/* =====================================
-   Decrypt loaded document
-===================================== */
 
 function decryptLoadedDocument(loaded) {
   if (loaded.provider === "s3") {
-    return decryptBuffer(
-      loaded.encryptedBuffer
-    );
+    return decryptBuffer(loaded.encryptedBuffer);
   }
 
-  return decryptFile(
-    loaded.filepath
-  );
+  return decryptFile(loaded.filepath);
 }
-
-/* =====================================
-   Document List
-===================================== */
 
 router.get("/", async (req, res) => {
   try {
-    const {
-      status = "active",
-      search = "",
-      type = "",
-    } = req.query;
+    const { status = "active", search = "", type = "" } = req.query;
 
     const query = {
       uploadedBy: req.user._id,
@@ -231,8 +146,7 @@ router.get("/", async (req, res) => {
     }
 
     if (type) {
-      query.fileType =
-        type.toLowerCase();
+      query.fileType = type.toLowerCase();
     }
 
     if (search.trim()) {
@@ -258,14 +172,13 @@ router.get("/", async (req, res) => {
       ];
     }
 
-    const documents =
-      await Document.find(query)
-        .select(
-          "-content -filepath -s3Key -security.plaintextHash -security.encryptedHash -security.iv"
-        )
-        .sort({
-          createdAt: -1,
-        });
+    const documents = await Document.find(query)
+      .select(
+        "-content -filepath -s3Key -security.plaintextHash -security.encryptedHash -security.iv",
+      )
+      .sort({
+        createdAt: -1,
+      });
 
     return res.json(documents);
   } catch (error) {
@@ -276,684 +189,468 @@ router.get("/", async (req, res) => {
   }
 });
 
-/* =====================================
-   Evidence
-===================================== */
+router.get("/evidence/:id", getEvidenceProfile);
 
-router.get(
-  "/evidence/:id",
-  getEvidenceProfile
-);
+router.get("/view/:id", async (req, res) => {
+  try {
+    const document = await Document.findOne(
+      owned(req, {
+        deleted: false,
+      }),
+    );
 
-/* =====================================
-   Secure View
-===================================== */
+    if (!document) {
+      return res.status(404).json({
+        success: false,
+        message: "Document not found",
+      });
+    }
 
-router.get(
-  "/view/:id",
-  async (req, res) => {
-    try {
-      const document =
-        await Document.findOne(
-          owned(req, {
-            deleted: false,
-          })
-        );
+    const loaded = await loadEncryptedDocument(document);
 
-      if (!document) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Document not found",
-        });
-      }
+    if (!loaded.available) {
+      await recordSecurityEvent({
+        req,
+        user: req.user._id,
+        document: document._id,
+        type: "integrity",
+        outcome: "blocked",
+        severity: "high",
+        message: "Document file unavailable. Re-upload required.",
+      });
 
-      const loaded =
-        await loadEncryptedDocument(
-          document
-        );
+      return res.status(404).json({
+        success: false,
+        code: "FILE_UNAVAILABLE",
+        message: "Document file is unavailable. Please re-upload the original file.",
+      });
+    }
 
-      if (!loaded.available) {
-        await recordSecurityEvent({
-          req,
-          user: req.user._id,
-          document: document._id,
-          type: "integrity",
-          outcome: "blocked",
-          severity: "high",
-          message:
-            "Document file unavailable. Re-upload required.",
-        });
+    const verification = verifyLoadedDocument(document, loaded);
 
-        return res.status(404).json({
-          success: false,
-          code: "FILE_UNAVAILABLE",
-          message:
-            "Document file is unavailable. Please re-upload the original file.",
-        });
-      }
-
-      const verification =
-        verifyLoadedDocument(
-          document,
-          loaded
-        );
-
-      if (!verification.valid) {
-        document.security = {
-          ...document.security,
-          integrityStatus:
-            verification.status,
-          lastVerifiedAt:
-            new Date(),
-          trustScore: 0,
-          trustGrade:
-            "restricted",
-        };
-
-        await document.save();
-
-        await recordSecurityEvent({
-          req,
-          user: req.user._id,
-          document: document._id,
-          type: "integrity",
-          outcome: "blocked",
-          severity: "critical",
-          message:
-            verification.reason,
-        });
-
-        return res.status(409).json({
-          success: false,
-          message:
-            "Document integrity verification failed. Access blocked.",
-        });
-      }
-
-      const plaintext =
-        decryptLoadedDocument(
-          loaded
-        );
-
-      document.views += 1;
-      document.lastOpened =
-        new Date();
-
-      document.storageStatus =
-        "available";
-
+    if (!verification.valid) {
       document.security = {
         ...document.security,
-        integrityStatus:
-          "verified",
-        lastVerifiedAt:
-          new Date(),
+        integrityStatus: verification.status,
+        lastVerifiedAt: new Date(),
+        trustScore: 0,
+        trustGrade: "restricted",
       };
 
       await document.save();
 
-      res.setHeader(
-        "Content-Type",
-        document.mimeType ||
-          "application/octet-stream"
-      );
+      await recordSecurityEvent({
+        req,
+        user: req.user._id,
+        document: document._id,
+        type: "integrity",
+        outcome: "blocked",
+        severity: "critical",
+        message: verification.reason,
+      });
 
-      res.setHeader(
-        "Content-Length",
-        plaintext.length
-      );
-
-      return res.send(
-        plaintext
-      );
-    } catch (error) {
-      console.error(
-        "Document view error:",
-        error
-      );
-
-      return res.status(500).json({
+      return res.status(409).json({
         success: false,
-        message: error.message,
+        message: "Document integrity verification failed. Access blocked.",
       });
     }
+
+    const plaintext = decryptLoadedDocument(loaded);
+
+    document.views += 1;
+    document.lastOpened = new Date();
+
+    document.storageStatus = "available";
+
+    document.security = {
+      ...document.security,
+      integrityStatus: "verified",
+      lastVerifiedAt: new Date(),
+    };
+
+    await document.save();
+
+    res.setHeader("Content-Type", document.mimeType || "application/octet-stream");
+
+    res.setHeader("Content-Length", plaintext.length);
+
+    return res.send(plaintext);
+  } catch (error) {
+    console.error("Document view error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
-);
+});
 
-/* =====================================
-   Secure Download
-===================================== */
+router.get("/download/:id", async (req, res) => {
+  try {
+    const document = await Document.findOne(
+      owned(req, {
+        deleted: false,
+      }),
+    );
 
-router.get(
-  "/download/:id",
-  async (req, res) => {
-    try {
-      const document =
-        await Document.findOne(
-          owned(req, {
-            deleted: false,
-          })
-        );
+    if (!document) {
+      return res.status(404).json({
+        success: false,
+        message: "Document not found",
+      });
+    }
 
-      if (!document) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Document not found",
-        });
-      }
+    const bioTrustRequired = requiresBioTrust(document);
 
-      const bioTrustRequired =
-        requiresBioTrust(document);
+    if (bioTrustRequired) {
+      const faceAuth = req.user?.faceAuth || {};
 
-      if (bioTrustRequired) {
-        const faceAuth =
-          req.user?.faceAuth || {};
-
-        if (
-          !faceAuth.enabled ||
-          !faceAuth.enrolled
-        ) {
-          await recordSecurityEvent({
-            req,
-            user: req.user._id,
-            document: document._id,
-            type: "biotrust_access",
-            outcome: "blocked",
-            severity: "high",
-            message:
-              "Sensitive document download blocked because BioTrust is not enrolled",
-          });
-
-          return res.status(403).json({
-            success: false,
-            code:
-              "BIOTRUST_ENROLLMENT_REQUIRED",
-            message:
-              "This sensitive document requires BioTrust face enrollment before download.",
-            documentId:
-              String(document._id),
-            bioTrustRequired: true,
-          });
-        }
-
-        const proofToken =
-          req.get("X-BioTrust-Proof") ||
-          "";
-
-        const proof =
-          verifyBiometricProof({
-            token: proofToken,
-            userId: req.user._id,
-            documentId:
-              document._id,
-            faceVersion:
-              Number(
-                faceAuth.version || 1
-              ),
-          });
-
-        if (!proof.valid) {
-          await recordSecurityEvent({
-            req,
-            user: req.user._id,
-            document: document._id,
-            type: "biotrust_access",
-            outcome: "blocked",
-            severity: "high",
-            message:
-              `Sensitive document download requires fresh BioTrust verification (${proof.reason})`,
-            metadata: {
-              reason: proof.reason,
-              priority:
-                document.priority ||
-                "unknown",
-            },
-          });
-
-          return res.status(403).json({
-            success: false,
-            code: "BIOTRUST_REQUIRED",
-            message:
-              "Sensitive document. Verify your identity with BioTrust before downloading.",
-            reason: proof.reason,
-            documentId:
-              String(document._id),
-            bioTrustRequired: true,
-          });
-        }
-
+      if (!faceAuth.enabled || !faceAuth.enrolled) {
         await recordSecurityEvent({
           req,
           user: req.user._id,
           document: document._id,
           type: "biotrust_access",
-          outcome: "allowed",
-          severity: "info",
-          message:
-            "Sensitive document download authorized by BioTrust",
-        });
-      }
-
-      const loaded =
-        await loadEncryptedDocument(
-          document
-        );
-
-      if (!loaded.available) {
-        await recordSecurityEvent({
-          req,
-          user: req.user._id,
-          document: document._id,
-          type: "integrity",
           outcome: "blocked",
           severity: "high",
-          message:
-            "Download failed because stored file is unavailable",
+          message: "Sensitive document download blocked because BioTrust is not enrolled",
         });
 
-        return res.status(404).json({
+        return res.status(403).json({
           success: false,
-          code: "FILE_UNAVAILABLE",
-          message:
-            "Document file is unavailable. Please re-upload the original file.",
+          code: "BIOTRUST_ENROLLMENT_REQUIRED",
+          message: "This sensitive document requires BioTrust face enrollment before download.",
+          documentId: String(document._id),
+          bioTrustRequired: true,
         });
       }
 
-      const verification =
-        verifyLoadedDocument(
-          document,
-          loaded
-        );
+      const proofToken = req.get("X-BioTrust-Proof") || "";
 
-      if (!verification.valid) {
-        document.security = {
-          ...document.security,
-          integrityStatus:
-            verification.status,
-          lastVerifiedAt:
-            new Date(),
-          trustScore: 0,
-          trustGrade:
-            "restricted",
-        };
+      const proof = verifyBiometricProof({
+        token: proofToken,
+        userId: req.user._id,
+        documentId: document._id,
+        faceVersion: Number(faceAuth.version || 1),
+      });
 
-        await document.save();
-
+      if (!proof.valid) {
         await recordSecurityEvent({
           req,
           user: req.user._id,
           document: document._id,
-          type: "integrity",
+          type: "biotrust_access",
           outcome: "blocked",
-          severity: "critical",
-          message:
-            verification.reason,
+          severity: "high",
+          message: `Sensitive document download requires fresh BioTrust verification (${proof.reason})`,
+          metadata: {
+            reason: proof.reason,
+            priority: document.priority || "unknown",
+          },
         });
 
-        return res.status(409).json({
+        return res.status(403).json({
           success: false,
-          message:
-            "Document integrity verification failed. Download blocked.",
+          code: "BIOTRUST_REQUIRED",
+          message: "Sensitive document. Verify your identity with BioTrust before downloading.",
+          reason: proof.reason,
+          documentId: String(document._id),
+          bioTrustRequired: true,
         });
       }
 
-      const plaintext =
-        decryptLoadedDocument(
-          loaded
-        );
+      await recordSecurityEvent({
+        req,
+        user: req.user._id,
+        document: document._id,
+        type: "biotrust_access",
+        outcome: "allowed",
+        severity: "info",
+        message: "Sensitive document download authorized by BioTrust",
+      });
+    }
 
-      document.downloads += 1;
+    const loaded = await loadEncryptedDocument(document);
 
-      document.storageStatus =
-        "available";
+    if (!loaded.available) {
+      await recordSecurityEvent({
+        req,
+        user: req.user._id,
+        document: document._id,
+        type: "integrity",
+        outcome: "blocked",
+        severity: "high",
+        message: "Download failed because stored file is unavailable",
+      });
 
+      return res.status(404).json({
+        success: false,
+        code: "FILE_UNAVAILABLE",
+        message: "Document file is unavailable. Please re-upload the original file.",
+      });
+    }
+
+    const verification = verifyLoadedDocument(document, loaded);
+
+    if (!verification.valid) {
       document.security = {
         ...document.security,
-        integrityStatus:
-          "verified",
-        lastVerifiedAt:
-          new Date(),
+        integrityStatus: verification.status,
+        lastVerifiedAt: new Date(),
+        trustScore: 0,
+        trustGrade: "restricted",
       };
 
       await document.save();
 
-      res.setHeader(
-        "X-Document-Name",
-        document.filename
-      );
+      await recordSecurityEvent({
+        req,
+        user: req.user._id,
+        document: document._id,
+        type: "integrity",
+        outcome: "blocked",
+        severity: "critical",
+        message: verification.reason,
+      });
 
-      res.setHeader(
-        "Content-Type",
-        document.mimeType ||
-          "application/octet-stream"
-      );
-
-      res.setHeader(
-        "Content-Length",
-        plaintext.length
-      );
-
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename*=UTF-8''${encodeURIComponent(
-          document.filename
-        )}`
-      );
-
-      return res.send(
-        plaintext
-      );
-    } catch (error) {
-      console.error(
-        "Document download error:",
-        error
-      );
-
-      return res.status(500).json({
+      return res.status(409).json({
         success: false,
-        message: error.message,
+        message: "Document integrity verification failed. Download blocked.",
       });
     }
+
+    const plaintext = decryptLoadedDocument(loaded);
+
+    document.downloads += 1;
+
+    document.storageStatus = "available";
+
+    document.security = {
+      ...document.security,
+      integrityStatus: "verified",
+      lastVerifiedAt: new Date(),
+    };
+
+    await document.save();
+
+    res.setHeader("X-Document-Name", document.filename);
+
+    res.setHeader("Content-Type", document.mimeType || "application/octet-stream");
+
+    res.setHeader("Content-Length", plaintext.length);
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename*=UTF-8''${encodeURIComponent(document.filename)}`,
+    );
+
+    return res.send(plaintext);
+  } catch (error) {
+    console.error("Document download error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
-);
+});
 
-/* =====================================
-   Favorite
-===================================== */
+router.put("/favorite/:id", async (req, res) => {
+  try {
+    const document = await Document.findOne(
+      owned(req, {
+        deleted: false,
+      }),
+    );
 
-router.put(
-  "/favorite/:id",
-  async (req, res) => {
-    try {
-      const document =
-        await Document.findOne(
-          owned(req, {
-            deleted: false,
-          })
-        );
+    if (!document) {
+      return res.status(404).json({
+        success: false,
+        message: "Document not found",
+      });
+    }
 
-      if (!document) {
-        return res.status(404).json({
+    document.favorite = !document.favorite;
+
+    await document.save();
+
+    await addActivity(
+      document.favorite ? "Added to Favorites" : "Removed from Favorites",
+      document.filename,
+      "star",
+      "yellow",
+      req.user._id,
+    );
+
+    return res.json({
+      success: true,
+      favorite: document.favorite,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.put("/pin/:id", async (req, res) => {
+  try {
+    const document = await Document.findOne(
+      owned(req, {
+        deleted: false,
+      }),
+    );
+
+    if (!document) {
+      return res.status(404).json({
+        success: false,
+        message: "Document not found",
+      });
+    }
+
+    document.pinned = !document.pinned;
+
+    await document.save();
+
+    await addActivity(
+      document.pinned ? "Pinned Document" : "Unpinned Document",
+      document.filename,
+      "pin",
+      "indigo",
+      req.user._id,
+    );
+
+    return res.json({
+      success: true,
+      pinned: document.pinned,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const document = await Document.findOne(
+      owned(req, {
+        deleted: false,
+      }),
+    );
+
+    if (!document) {
+      return res.status(404).json({
+        success: false,
+        message: "Document not found",
+      });
+    }
+
+    document.deleted = true;
+    document.favorite = false;
+    document.pinned = false;
+
+    await document.save();
+
+    await addActivity("Moved to Trash", document.filename, "trash", "red", req.user._id);
+
+    return res.json({
+      success: true,
+      message: "Document moved to Trash",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.put("/:id/restore", async (req, res) => {
+  try {
+    const document = await Document.findOne(
+      owned(req, {
+        deleted: true,
+      }),
+    );
+
+    if (!document) {
+      return res.status(404).json({
+        success: false,
+        message: "Document not found in Trash",
+      });
+    }
+
+    document.deleted = false;
+
+    await document.save();
+
+    await addActivity("Restored Document", document.filename, "restore", "green", req.user._id);
+
+    return res.json({
+      success: true,
+      message: "Document restored",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.delete("/:id/permanent", async (req, res) => {
+  try {
+    const document = await Document.findOne(
+      owned(req, {
+        deleted: true,
+      }),
+    );
+
+    if (!document) {
+      return res.status(404).json({
+        success: false,
+        message: "Document not found in Trash",
+      });
+    }
+
+    if (document.storageProvider === "s3" && document.s3Key) {
+      try {
+        await deleteDocument(document.s3Key);
+      } catch (error) {
+        console.error("S3 permanent delete error:", error.message);
+
+        return res.status(502).json({
           success: false,
-          message:
-            "Document not found",
+          message: "Unable to remove the stored S3 document. Database record was preserved.",
         });
       }
-
-      document.favorite =
-        !document.favorite;
-
-      await document.save();
-
-      await addActivity(
-        document.favorite
-          ? "Added to Favorites"
-          : "Removed from Favorites",
-        document.filename,
-        "star",
-        "yellow",
-        req.user._id
-      );
-
-      return res.json({
-        success: true,
-        favorite:
-          document.favorite,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message,
-      });
     }
-  }
-);
 
-/* =====================================
-   Pin
-===================================== */
-
-router.put(
-  "/pin/:id",
-  async (req, res) => {
-    try {
-      const document =
-        await Document.findOne(
-          owned(req, {
-            deleted: false,
-          })
-        );
-
-      if (!document) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Document not found",
-        });
-      }
-
-      document.pinned =
-        !document.pinned;
-
-      await document.save();
-
-      await addActivity(
-        document.pinned
-          ? "Pinned Document"
-          : "Unpinned Document",
-        document.filename,
-        "pin",
-        "indigo",
-        req.user._id
-      );
-
-      return res.json({
-        success: true,
-        pinned:
-          document.pinned,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message,
-      });
+    if (
+      document.storageProvider !== "s3" &&
+      document.filepath &&
+      fs.existsSync(document.filepath)
+    ) {
+      fs.unlinkSync(document.filepath);
     }
+
+    await document.deleteOne();
+
+    await addActivity("Permanently Deleted", document.filename, "trash", "red", req.user._id);
+
+    return res.json({
+      success: true,
+      message: "Document permanently deleted",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
-);
-
-/* =====================================
-   Move To Trash
-===================================== */
-
-router.delete(
-  "/:id",
-  async (req, res) => {
-    try {
-      const document =
-        await Document.findOne(
-          owned(req, {
-            deleted: false,
-          })
-        );
-
-      if (!document) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Document not found",
-        });
-      }
-
-      document.deleted = true;
-      document.favorite = false;
-      document.pinned = false;
-
-      await document.save();
-
-      await addActivity(
-        "Moved to Trash",
-        document.filename,
-        "trash",
-        "red",
-        req.user._id
-      );
-
-      return res.json({
-        success: true,
-        message:
-          "Document moved to Trash",
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  }
-);
-
-/* =====================================
-   Restore
-===================================== */
-
-router.put(
-  "/:id/restore",
-  async (req, res) => {
-    try {
-      const document =
-        await Document.findOne(
-          owned(req, {
-            deleted: true,
-          })
-        );
-
-      if (!document) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Document not found in Trash",
-        });
-      }
-
-      document.deleted = false;
-
-      await document.save();
-
-      await addActivity(
-        "Restored Document",
-        document.filename,
-        "restore",
-        "green",
-        req.user._id
-      );
-
-      return res.json({
-        success: true,
-        message:
-          "Document restored",
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  }
-);
-
-/* =====================================
-   Permanent Delete
-
-   S3 object is removed here.
-===================================== */
-
-router.delete(
-  "/:id/permanent",
-  async (req, res) => {
-    try {
-      const document =
-        await Document.findOne(
-          owned(req, {
-            deleted: true,
-          })
-        );
-
-      if (!document) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Document not found in Trash",
-        });
-      }
-
-      /* -----------------------------
-         AWS S3 delete
-      ----------------------------- */
-
-      if (
-        document.storageProvider ===
-          "s3" &&
-        document.s3Key
-      ) {
-        try {
-          await deleteDocument(
-            document.s3Key
-          );
-        } catch (error) {
-          console.error(
-            "S3 permanent delete error:",
-            error.message
-          );
-
-          return res.status(502).json({
-            success: false,
-            message:
-              "Unable to remove the stored S3 document. Database record was preserved.",
-          });
-        }
-      }
-
-      /* -----------------------------
-         Legacy local delete
-      ----------------------------- */
-
-      if (
-        document.storageProvider !==
-          "s3" &&
-        document.filepath &&
-        fs.existsSync(
-          document.filepath
-        )
-      ) {
-        fs.unlinkSync(
-          document.filepath
-        );
-      }
-
-      await document.deleteOne();
-
-      await addActivity(
-        "Permanently Deleted",
-        document.filename,
-        "trash",
-        "red",
-        req.user._id
-      );
-
-      return res.json({
-        success: true,
-        message:
-          "Document permanently deleted",
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  }
-);
+});
 
 module.exports = router;

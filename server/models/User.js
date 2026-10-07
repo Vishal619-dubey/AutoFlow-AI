@@ -46,10 +46,6 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-    /* ==========================
-       Login Security
-    ========================== */
-
     failedLoginAttempts: {
       type: Number,
       default: 0,
@@ -74,10 +70,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-
-    /* ==========================
-       BioTrust Face Security
-    ========================== */
 
     faceAuth: {
       enabled: {
@@ -133,7 +125,7 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("User", userSchema);

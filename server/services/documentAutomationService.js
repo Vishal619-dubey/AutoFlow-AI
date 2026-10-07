@@ -1,9 +1,18 @@
 const categoryRules = [
   { category: "Finance", words: ["invoice", "payment", "amount", "gst", "tax", "budget"] },
   { category: "Legal", words: ["agreement", "contract", "clause", "legal", "party", "terms"] },
-  { category: "Academic", words: ["research", "student", "university", "chapter", "study", "exam"] },
-  { category: "Human Resources", words: ["employee", "leave", "salary", "candidate", "resume", "interview"] },
-  { category: "Operations", words: ["shipment", "inventory", "vendor", "purchase", "delivery", "order"] },
+  {
+    category: "Academic",
+    words: ["research", "student", "university", "chapter", "study", "exam"],
+  },
+  {
+    category: "Human Resources",
+    words: ["employee", "leave", "salary", "candidate", "resume", "interview"],
+  },
+  {
+    category: "Operations",
+    words: ["shipment", "inventory", "vendor", "purchase", "delivery", "order"],
+  },
 ];
 
 const priorityWords = {
@@ -19,7 +28,9 @@ function extractTasks(text) {
   return text
     .split(/[.\n]/)
     .map((line) => line.trim())
-    .filter((line) => /\b(must|should|need to|required to|action|submit|review|approve)\b/i.test(line))
+    .filter((line) =>
+      /\b(must|should|need to|required to|action|submit|review|approve)\b/i.test(line),
+    )
     .slice(0, 5);
 }
 
@@ -35,7 +46,7 @@ function analyzeDocument({ filename = "", content = "" }) {
   const extractedTasks = extractTasks(content);
   const automationScore = Math.min(
     98,
-    55 + (match ? 20 : 0) + (extractedTasks.length * 4) + (priority === "critical" ? 8 : 0)
+    55 + (match ? 20 : 0) + extractedTasks.length * 4 + (priority === "critical" ? 8 : 0),
   );
 
   return {

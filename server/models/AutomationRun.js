@@ -44,7 +44,7 @@ const automationRunSchema = new mongoose.Schema(
       default: "Automation completed successfully",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("AutomationRun", automationRunSchema);

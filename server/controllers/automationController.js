@@ -9,23 +9,26 @@ const { createNotification } = require("../services/notificationService");
 function localRuleParser(description = "") {
   const text = description.toLowerCase();
 
-  const trigger = text.includes("approval completed") || text.includes("after approval")
-    ? "Approval completed"
-    : text.includes("urgent") || text.includes("critical") || text.includes("high priority")
-      ? "High priority detected"
-      : "Document uploaded";
+  const trigger =
+    text.includes("approval completed") || text.includes("after approval")
+      ? "Approval completed"
+      : text.includes("urgent") || text.includes("critical") || text.includes("high priority")
+        ? "High priority detected"
+        : "Document uploaded";
 
-  const condition = text.includes("finance") || text.includes("invoice") || text.includes("payment")
-    ? "Category is Finance"
-    : text.includes("critical")
-      ? "Priority is Critical"
-      : "Any document";
+  const condition =
+    text.includes("finance") || text.includes("invoice") || text.includes("payment")
+      ? "Category is Finance"
+      : text.includes("critical")
+        ? "Priority is Critical"
+        : "Any document";
 
-  const action = text.includes("approv") || text.includes("review")
-    ? "Send for approval"
-    : text.includes("task") || text.includes("action item")
-      ? "Extract action items"
-      : "Classify and prioritize";
+  const action =
+    text.includes("approv") || text.includes("review")
+      ? "Send for approval"
+      : text.includes("task") || text.includes("action item")
+        ? "Extract action items"
+        : "Classify and prioritize";
 
   return {
     name: text.includes("invoice") ? "Smart Invoice Workflow" : "AI Generated Workflow",
@@ -39,7 +42,9 @@ exports.parseNaturalLanguageRule = async (req, res) => {
   const { description } = req.body;
 
   if (!description?.trim()) {
-    return res.status(400).json({ success: false, message: "Describe the automation you want to create" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Describe the automation you want to create" });
   }
 
   try {
@@ -111,7 +116,14 @@ exports.reprocessDocument = async (req, res) => {
     if (!document) return res.status(404).json({ success: false, message: "Document not found" });
     Object.assign(document, analyzeDocument(document));
     await document.save();
-    await createNotification({ user: req.user._id, type: "automation", title: "Document automation completed", message: `${document.filename} was reclassified and prioritized successfully.`, document: document._id, actionPath: "/documents" });
+    await createNotification({
+      user: req.user._id,
+      type: "automation",
+      title: "Document automation completed",
+      message: `${document.filename} was reclassified and prioritized successfully.`,
+      document: document._id,
+      actionPath: "/documents",
+    });
     return res.json({ success: true, message: "Automation completed", document });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -127,7 +139,7 @@ exports.updateReviewStatus = async (req, res) => {
     const document = await Document.findOneAndUpdate(
       { _id: req.params.id, uploadedBy: req.user._id, deleted: false },
       { workflowStatus: req.body.status },
-      { new: true }
+      { new: true },
     );
     if (!document) return res.status(404).json({ success: false, message: "Document not found" });
 
@@ -175,9 +187,17 @@ exports.createRule = async (req, res) => {
   try {
     const { name, trigger, condition, action } = req.body;
     if (!name || !trigger || !action) {
-      return res.status(400).json({ success: false, message: "Name, trigger and action are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Name, trigger and action are required" });
     }
-    const rule = await AutomationRule.create({ name, trigger, condition, action, createdBy: req.user._id });
+    const rule = await AutomationRule.create({
+      name,
+      trigger,
+      condition,
+      action,
+      createdBy: req.user._id,
+    });
     return res.status(201).json({ success: true, rule });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -193,7 +213,10 @@ exports.toggleRule = async (req, res) => {
 };
 
 exports.deleteRule = async (req, res) => {
-  const rule = await AutomationRule.findOneAndDelete({ _id: req.params.id, createdBy: req.user._id });
+  const rule = await AutomationRule.findOneAndDelete({
+    _id: req.params.id,
+    createdBy: req.user._id,
+  });
   if (!rule) return res.status(404).json({ success: false, message: "Rule not found" });
   return res.json({ success: true, message: "Rule deleted" });
 };

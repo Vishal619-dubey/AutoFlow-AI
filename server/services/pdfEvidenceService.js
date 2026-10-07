@@ -2,22 +2,15 @@ const crypto = require("crypto");
 const fs = require("fs");
 const pdfParse = require("pdf-parse");
 
-/* =====================================================
-   Extract PDF From Buffer
-===================================================== */
-
 async function extractPageAwarePdfFromBuffer(buffer) {
   const parsed = await pdfParse(buffer, {
     pagerender: async (pageData) => {
-      const textContent =
-        await pageData.getTextContent({
-          normalizeWhitespace: true,
-          disableCombineTextItems: false,
-        });
+      const textContent = await pageData.getTextContent({
+        normalizeWhitespace: true,
+        disableCombineTextItems: false,
+      });
 
-      const text = textContent.items
-        .map((item) => item.str)
-        .join(" ");
+      const text = textContent.items.map((item) => item.str).join(" ");
 
       return `[PAGE ${pageData.pageNumber}]\n${text}`;
     },
@@ -29,80 +22,37 @@ async function extractPageAwarePdfFromBuffer(buffer) {
   };
 }
 
-/* =====================================================
-   Legacy Local PDF Extraction
-===================================================== */
-
 async function extractPageAwarePdf(filepath) {
   const buffer = fs.readFileSync(filepath);
 
-  return extractPageAwarePdfFromBuffer(
-    buffer
-  );
+  return extractPageAwarePdfFromBuffer(buffer);
 }
 
-/* =====================================================
-   Ensure Page-Aware Content
-
-   plaintextBuffer is supplied for S3 PDFs.
-===================================================== */
-
-async function ensurePageAwareContent(
-  document,
-  plaintextBuffer = null
-) {
-  if (
-    document.fileType === "pdf" &&
-    !/\[PAGE \d+\]/.test(
-      document.content || ""
-    )
-  ) {
+async function ensurePageAwareContent(document, plaintextBuffer = null) {
+  if (document.fileType === "pdf" && !/\[PAGE \d+\]/.test(document.content || "")) {
     try {
       let parsed;
 
-      if (
-        plaintextBuffer &&
-        Buffer.isBuffer(plaintextBuffer)
-      ) {
-        parsed =
-          await extractPageAwarePdfFromBuffer(
-            plaintextBuffer
-          );
-      } else if (
-        document.filepath &&
-        fs.existsSync(document.filepath)
-      ) {
-        parsed =
-          await extractPageAwarePdf(
-            document.filepath
-          );
+      if (plaintextBuffer && Buffer.isBuffer(plaintextBuffer)) {
+        parsed = await extractPageAwarePdfFromBuffer(plaintextBuffer);
+      } else if (document.filepath && fs.existsSync(document.filepath)) {
+        parsed = await extractPageAwarePdf(document.filepath);
       }
 
       if (parsed) {
-        document.content =
-          parsed.content;
+        document.content = parsed.content;
 
-        document.pages =
-          parsed.pages;
+        document.pages = parsed.pages;
 
         await document.save();
       }
     } catch (error) {
-      console.warn(
-        "Evidence page indexing skipped:",
-        error.message
-      );
+      console.warn("Evidence page indexing skipped:", error.message);
     }
   }
 
-  if (
-    document.fileType === "txt" &&
-    !/\[PAGE \d+\]/.test(
-      document.content || ""
-    )
-  ) {
-    document.content =
-      `[PAGE 1]\n${document.content || ""}`;
+  if (document.fileType === "txt" && !/\[PAGE \d+\]/.test(document.content || "")) {
+    document.content = `[PAGE 1]\n${document.content || ""}`;
 
     document.pages = 1;
 
@@ -112,55 +62,26 @@ async function ensurePageAwareContent(
   return document.content || "";
 }
 
-/* =====================================================
-   SHA-256
-===================================================== */
-
 function hashBuffer(buffer) {
-  return crypto
-    .createHash("sha256")
-    .update(buffer)
-    .digest("hex");
+  return crypto.createHash("sha256").update(buffer).digest("hex");
 }
 
 function hashFile(filepath) {
-  return new Promise(
-    (resolve, reject) => {
-      const hash =
-        crypto.createHash("sha256");
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash("sha256");
 
-      const stream =
-        fs.createReadStream(filepath);
+    const stream = fs.createReadStream(filepath);
 
-      stream.on(
-        "data",
-        (chunk) => hash.update(chunk)
-      );
+    stream.on("data", (chunk) => hash.update(chunk));
 
-      stream.on(
-        "error",
-        reject
-      );
+    stream.on("error", reject);
 
-      stream.on("end", () =>
-        resolve(
-          hash.digest("hex")
-        )
-      );
-    }
-  );
+    stream.on("end", () => resolve(hash.digest("hex")));
+  });
 }
 
-/* =====================================================
-   Evidence Helpers
-===================================================== */
-
 function splitPages(content = "") {
-  const matches = [
-    ...content.matchAll(
-      /\[PAGE (\d+)\]\s*([\s\S]*?)(?=\[PAGE \d+\]|$)/g
-    ),
-  ];
+  const matches = [...content.matchAll(/\[PAGE (\d+)\]\s*([\s\S]*?)(?=\[PAGE \d+\]|$)/g)];
 
   if (!matches.length) {
     return [
@@ -171,37 +92,24 @@ function splitPages(content = "") {
     ];
   }
 
-  return matches.map(
-    (match) => ({
-      page: Number(match[1]),
-      text:
-        match[2].trim(),
-    })
-  );
+  return matches.map((match) => ({
+    page: Number(match[1]),
+    text: match[2].trim(),
+  }));
 }
 
 function clean(value = "") {
-  return value
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 220);
+  return value.replace(/\s+/g, " ").trim().slice(0, 220);
 }
 
-function unique(
-  items,
-  limit = 6
-) {
+function unique(items, limit = 6) {
   const seen = new Set();
 
   return items
     .filter((item) => {
-      const key =
-        item.text.toLowerCase();
+      const key = item.text.toLowerCase();
 
-      if (
-        !key ||
-        seen.has(key)
-      ) {
+      if (!key || seen.has(key)) {
         return false;
       }
 
@@ -211,15 +119,8 @@ function unique(
     .slice(0, limit);
 }
 
-/* =====================================================
-   Build Evidence Insights
-===================================================== */
-
-function buildEvidenceInsights(
-  content = ""
-) {
-  const pages =
-    splitPages(content);
+function buildEvidenceInsights(content = "") {
+  const pages = splitPages(content);
 
   const risks = [];
   const deadlines = [];
@@ -235,41 +136,23 @@ function buildEvidenceInsights(
   const datePattern =
     /\b(?:\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}|\d{1,2}\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{2,4})\b/gi;
 
-  const amountPattern =
-    /(?:₹|INR\s?|Rs\.?\s?)\d[\d,]*(?:\.\d{1,2})?/gi;
+  const amountPattern = /(?:₹|INR\s?|Rs\.?\s?)\d[\d,]*(?:\.\d{1,2})?/gi;
 
   for (const page of pages) {
-    const sentences =
-      page.text
-        .split(
-          /(?<=[.!?])\s+|\n+/
-        )
-        .map(clean)
-        .filter(
-          (line) =>
-            line.length > 12
-        );
+    const sentences = page.text
+      .split(/(?<=[.!?])\s+|\n+/)
+      .map(clean)
+      .filter((line) => line.length > 12);
 
-    for (
-      const sentence of
-      sentences
-    ) {
-      if (
-        riskPattern.test(
-          sentence
-        )
-      ) {
+    for (const sentence of sentences) {
+      if (riskPattern.test(sentence)) {
         risks.push({
           text: sentence,
           page: page.page,
         });
       }
 
-      if (
-        decisionPattern.test(
-          sentence
-        )
-      ) {
+      if (decisionPattern.test(sentence)) {
         decisions.push({
           text: sentence,
           page: page.page,
@@ -277,24 +160,14 @@ function buildEvidenceInsights(
       }
     }
 
-    for (
-      const match of
-      page.text.match(
-        datePattern
-      ) || []
-    ) {
+    for (const match of page.text.match(datePattern) || []) {
       deadlines.push({
         text: match,
         page: page.page,
       });
     }
 
-    for (
-      const match of
-      page.text.match(
-        amountPattern
-      ) || []
-    ) {
+    for (const match of page.text.match(amountPattern) || []) {
       amounts.push({
         text: match,
         page: page.page,
@@ -303,17 +176,13 @@ function buildEvidenceInsights(
   }
 
   return {
-    risks:
-      unique(risks),
+    risks: unique(risks),
 
-    deadlines:
-      unique(deadlines),
+    deadlines: unique(deadlines),
 
-    amounts:
-      unique(amounts),
+    amounts: unique(amounts),
 
-    decisions:
-      unique(decisions),
+    decisions: unique(decisions),
   };
 }
 

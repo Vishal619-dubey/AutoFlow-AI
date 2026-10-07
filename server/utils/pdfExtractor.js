@@ -8,7 +8,6 @@ const extractPdfText = async (filePath) => {
     const data = await pdf(buffer);
 
     return data.text;
-
   } catch (err) {
     console.log(err);
 

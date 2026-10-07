@@ -1,9 +1,6 @@
 ﻿const User = require("../models/User");
 
-const {
-  validateFaceImage,
-  compareFaces,
-} = require("../services/rekognitionService");
+const { validateFaceImage, compareFaces } = require("../services/rekognitionService");
 
 const {
   saveFaceReference,
@@ -15,10 +12,6 @@ const { createBiometricProof } = require("../services/biometricProofService");
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_TIME_MS = 10 * 60 * 1000;
-
-/* =====================================================
-   Enroll Face
-===================================================== */
 
 const enrollFace = async (req, res) => {
   try {
@@ -38,13 +31,7 @@ const enrollFace = async (req, res) => {
       });
     }
 
-    /* -----------------------------------------
-       Validate enrollment image
-    ----------------------------------------- */
-
-    const validation = await validateFaceImage(
-      req.file.buffer
-    );
+    const validation = await validateFaceImage(req.file.buffer);
 
     if (!validation.valid) {
       return res.status(400).json({
@@ -53,30 +40,19 @@ const enrollFace = async (req, res) => {
       });
     }
 
-    if (
-      validation.sharpness !== undefined &&
-      validation.sharpness < 20
-    ) {
+    if (validation.sharpness !== undefined && validation.sharpness < 20) {
       return res.status(400).json({
         success: false,
-        message:
-          "Face image is too blurry. Capture a clearer photo.",
+        message: "Face image is too blurry. Capture a clearer photo.",
       });
     }
 
-    /* -----------------------------------------
-       Encrypt + Store reference in private S3
-    ----------------------------------------- */
+    const { s3Key, referenceHash } = await saveFaceReference({
+      userId: user._id.toString(),
+      imageBuffer: req.file.buffer,
+    });
 
-    const { s3Key, referenceHash } =
-      await saveFaceReference({
-        userId: user._id.toString(),
-        imageBuffer: req.file.buffer,
-      });
-
-    const previousVersion = Number(
-      user.faceAuth?.version || 0
-    );
+    const previousVersion = Number(user.faceAuth?.version || 0);
 
     user.faceAuth = {
       enabled: true,
@@ -102,8 +78,7 @@ const enrollFace = async (req, res) => {
     return res.status(200).json({
       success: true,
 
-      message:
-        "BioTrust face enrollment completed successfully.",
+      message: "BioTrust face enrollment completed successfully.",
 
       faceAuth: {
         enabled: true,
@@ -113,22 +88,14 @@ const enrollFace = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(
-      "BioTrust Enrollment Error:",
-      error.message
-    );
+    console.error("BioTrust Enrollment Error:", error.message);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Unable to complete biometric enrollment.",
+      message: "Unable to complete biometric enrollment.",
     });
   }
 };
-
-/* =====================================================
-   Verify Live Face
-===================================================== */
 
 const verifyFace = async (req, res) => {
   try {
@@ -148,57 +115,30 @@ const verifyFace = async (req, res) => {
       });
     }
 
-    /* -----------------------------------------
-       Enrollment required
-    ----------------------------------------- */
-
-    if (
-      !user.faceAuth?.enabled ||
-      !user.faceAuth?.enrolled
-    ) {
+    if (!user.faceAuth?.enabled || !user.faceAuth?.enrolled) {
       return res.status(400).json({
         success: false,
         verified: false,
         code: "FACE_NOT_ENROLLED",
-        message:
-          "Face verification has not been enrolled.",
+        message: "Face verification has not been enrolled.",
       });
     }
 
-    /* -----------------------------------------
-       Handle biometric lock
-    ----------------------------------------- */
+    const lockedUntil = user.faceAuth?.lockedUntil ? new Date(user.faceAuth.lockedUntil) : null;
 
-    const lockedUntil =
-      user.faceAuth?.lockedUntil
-        ? new Date(user.faceAuth.lockedUntil)
-        : null;
-
-    if (
-      lockedUntil &&
-      lockedUntil > new Date()
-    ) {
+    if (lockedUntil && lockedUntil > new Date()) {
       return res.status(423).json({
         success: false,
         verified: false,
         code: "BIOMETRIC_LOCKED",
 
-        message:
-          "Biometric verification is temporarily locked due to repeated failed attempts.",
+        message: "Biometric verification is temporarily locked due to repeated failed attempts.",
 
         lockedUntil,
       });
     }
 
-    /*
-      Previous lock has expired.
-      Clear stale lock before continuing.
-    */
-
-    if (
-      lockedUntil &&
-      lockedUntil <= new Date()
-    ) {
+    if (lockedUntil && lockedUntil <= new Date()) {
       user.faceAuth.lockedUntil = null;
       user.faceAuth.failedAttempts = 0;
 
@@ -206,51 +146,26 @@ const verifyFace = async (req, res) => {
       await user.save();
     }
 
-    /* -----------------------------------------
-       Load encrypted enrolled face from S3
-    ----------------------------------------- */
+    const enrolledImageBuffer = await getFaceReference({
+      s3Key: user.faceAuth.referenceS3Key,
 
-    const enrolledImageBuffer =
-      await getFaceReference({
-        s3Key:
-          user.faceAuth.referenceS3Key,
-
-        referenceHash:
-          user.faceAuth.referenceHash,
-      });
-
-    /* -----------------------------------------
-       Compare enrolled vs live face
-    ----------------------------------------- */
+      referenceHash: user.faceAuth.referenceHash,
+    });
 
     const result = await compareFaces({
       enrolledImageBuffer,
       liveImageBuffer: req.file.buffer,
     });
 
-    /* -----------------------------------------
-       Verification Failed
-    ----------------------------------------- */
-
     if (!result.verified) {
-      const failedAttempts =
-        Number(
-          user.faceAuth.failedAttempts || 0
-        ) + 1;
+      const failedAttempts = Number(user.faceAuth.failedAttempts || 0) + 1;
 
-      user.faceAuth.failedAttempts =
-        failedAttempts;
+      user.faceAuth.failedAttempts = failedAttempts;
 
       let accountLocked = false;
 
-      if (
-        failedAttempts >=
-        MAX_FAILED_ATTEMPTS
-      ) {
-        user.faceAuth.lockedUntil =
-          new Date(
-            Date.now() + LOCK_TIME_MS
-          );
+      if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+        user.faceAuth.lockedUntil = new Date(Date.now() + LOCK_TIME_MS);
 
         user.faceAuth.failedAttempts = 0;
 
@@ -260,72 +175,41 @@ const verifyFace = async (req, res) => {
       user.markModified("faceAuth");
       await user.save();
 
-      /*
-        IMPORTANT:
-        403 is intentional.
-
-        401 would make frontend treat the JWT
-        as invalid and logout the user.
-      */
-
       return res.status(403).json({
         success: false,
         verified: false,
 
-        code: accountLocked
-          ? "BIOMETRIC_LOCKED"
-          : "FACE_VERIFICATION_FAILED",
+        code: accountLocked ? "BIOMETRIC_LOCKED" : "FACE_VERIFICATION_FAILED",
 
         message: accountLocked
           ? "Too many failed biometric attempts. Verification has been temporarily locked."
           : "Face verification failed.",
 
-        remainingAttempts:
-          accountLocked
-            ? 0
-            : Math.max(
-                0,
-                MAX_FAILED_ATTEMPTS -
-                  failedAttempts
-              ),
+        remainingAttempts: accountLocked ? 0 : Math.max(0, MAX_FAILED_ATTEMPTS - failedAttempts),
 
-        lockedUntil:
-          accountLocked
-            ? user.faceAuth.lockedUntil
-            : null,
+        lockedUntil: accountLocked ? user.faceAuth.lockedUntil : null,
       });
     }
-
-    /* -----------------------------------------
-       Verification Success
-    ----------------------------------------- */
 
     user.faceAuth.failedAttempts = 0;
     user.faceAuth.lockedUntil = null;
 
-    user.faceAuth.lastVerifiedAt =
-      new Date();
+    user.faceAuth.lastVerifiedAt = new Date();
 
-    user.faceAuth.verificationCount =
-      Number(
-        user.faceAuth.verificationCount ||
-          0
-      ) + 1;
+    user.faceAuth.verificationCount = Number(user.faceAuth.verificationCount || 0) + 1;
 
     user.markModified("faceAuth");
     await user.save();
 
     let biometricProof = null;
 
-    const requestedDocumentId =
-      String(req.body?.documentId || "").trim();
+    const requestedDocumentId = String(req.body?.documentId || "").trim();
 
     if (requestedDocumentId) {
       const proof = createBiometricProof({
         userId: user._id,
         documentId: requestedDocumentId,
-        faceVersion:
-          Number(user.faceAuth?.version || 1),
+        faceVersion: Number(user.faceAuth?.version || 1),
       });
 
       biometricProof = {
@@ -338,47 +222,33 @@ const verifyFace = async (req, res) => {
       success: true,
       verified: true,
 
-      message:
-        "BioTrust identity verification successful.",
+      message: "BioTrust identity verification successful.",
 
       biometricProof,
 
       verification: {
-        similarity:
-          result.similarity,
+        similarity: result.similarity,
 
-        threshold:
-          result.threshold,
+        threshold: result.threshold,
 
-        verifiedAt:
-          user.faceAuth.lastVerifiedAt,
+        verifiedAt: user.faceAuth.lastVerifiedAt,
       },
     });
   } catch (error) {
-    console.error(
-      "BioTrust Verification Error:",
-      error.message
-    );
+    console.error("BioTrust Verification Error:", error.message);
 
     return res.status(500).json({
       success: false,
       verified: false,
 
-      message:
-        "Unable to complete biometric verification.",
+      message: "Unable to complete biometric verification.",
     });
   }
 };
 
-/* =====================================================
-   Get Face Status
-===================================================== */
-
 const getFaceStatus = async (req, res) => {
   try {
-    const user = await User.findById(
-      req.user._id
-    ).select("faceAuth");
+    const user = await User.findById(req.user._id).select("faceAuth");
 
     if (!user) {
       return res.status(404).json({
@@ -387,77 +257,45 @@ const getFaceStatus = async (req, res) => {
       });
     }
 
-    const currentlyLocked =
-      Boolean(
-        user.faceAuth?.lockedUntil &&
-          new Date(
-            user.faceAuth.lockedUntil
-          ) > new Date()
-      );
+    const currentlyLocked = Boolean(
+      user.faceAuth?.lockedUntil && new Date(user.faceAuth.lockedUntil) > new Date(),
+    );
 
     return res.status(200).json({
       success: true,
 
       faceAuth: {
-        enabled: Boolean(
-          user.faceAuth?.enabled
-        ),
+        enabled: Boolean(user.faceAuth?.enabled),
 
-        enrolled: Boolean(
-          user.faceAuth?.enrolled
-        ),
+        enrolled: Boolean(user.faceAuth?.enrolled),
 
-        enrolledAt:
-          user.faceAuth?.enrolledAt ||
-          null,
+        enrolledAt: user.faceAuth?.enrolledAt || null,
 
-        lastVerifiedAt:
-          user.faceAuth?.lastVerifiedAt ||
-          null,
+        lastVerifiedAt: user.faceAuth?.lastVerifiedAt || null,
 
-        verificationCount:
-          Number(
-            user.faceAuth
-              ?.verificationCount || 0
-          ),
+        verificationCount: Number(user.faceAuth?.verificationCount || 0),
 
         locked: currentlyLocked,
 
-        lockedUntil:
-          currentlyLocked
-            ? user.faceAuth.lockedUntil
-            : null,
+        lockedUntil: currentlyLocked ? user.faceAuth.lockedUntil : null,
 
-        version:
-          Number(
-            user.faceAuth?.version || 1
-          ),
+        version: Number(user.faceAuth?.version || 1),
       },
     });
   } catch (error) {
-    console.error(
-      "BioTrust Status Error:",
-      error.message
-    );
+    console.error("BioTrust Status Error:", error.message);
 
     return res.status(500).json({
       success: false,
 
-      message:
-        "Unable to read biometric status.",
+      message: "Unable to read biometric status.",
     });
   }
 };
 
-/* =====================================================
-   Remove Face Enrollment
-===================================================== */
-
 const removeFace = async (req, res) => {
   try {
-    const user = await User.findById(
-      req.user._id
-    );
+    const user = await User.findById(req.user._id);
 
     if (!user) {
       return res.status(404).json({
@@ -466,23 +304,13 @@ const removeFace = async (req, res) => {
       });
     }
 
-    const existingS3Key =
-      user.faceAuth?.referenceS3Key ||
-      "";
-
-    /* -----------------------------------------
-       Remove encrypted biometric from S3
-    ----------------------------------------- */
+    const existingS3Key = user.faceAuth?.referenceS3Key || "";
 
     if (existingS3Key) {
-      await deleteFaceReference(
-        existingS3Key
-      );
+      await deleteFaceReference(existingS3Key);
     }
 
-    const previousVersion = Number(
-      user.faceAuth?.version || 0
-    );
+    const previousVersion = Number(user.faceAuth?.version || 0);
 
     user.faceAuth = {
       enabled: false,
@@ -508,20 +336,15 @@ const removeFace = async (req, res) => {
     return res.status(200).json({
       success: true,
 
-      message:
-        "BioTrust face enrollment removed successfully.",
+      message: "BioTrust face enrollment removed successfully.",
     });
   } catch (error) {
-    console.error(
-      "BioTrust Remove Error:",
-      error.message
-    );
+    console.error("BioTrust Remove Error:", error.message);
 
     return res.status(500).json({
       success: false,
 
-      message:
-        "Unable to remove biometric enrollment.",
+      message: "Unable to remove biometric enrollment.",
     });
   }
 };

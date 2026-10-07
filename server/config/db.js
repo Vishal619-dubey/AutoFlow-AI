@@ -13,13 +13,11 @@ const connectDB = async () => {
     console.log("MongoDB Connected");
     console.log("Database:", mongoose.connection.name);
 
-    const collections = await mongoose.connection.db
-      .listCollections()
-      .toArray();
+    const collections = await mongoose.connection.db.listCollections().toArray();
 
     console.log(
       "Collections:",
-      collections.map((collection) => collection.name)
+      collections.map((collection) => collection.name),
     );
   } catch (error) {
     console.error("MongoDB Connection Error:", error.message);

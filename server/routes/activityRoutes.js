@@ -3,9 +3,7 @@ const express = require("express");
 const router = express.Router();
 const { protect } = require("../middleware/authMiddleware");
 
-const {
-  getActivities,
-} = require("../controllers/activityController");
+const { getActivities } = require("../controllers/activityController");
 
 router.get("/", protect, getActivities);
 

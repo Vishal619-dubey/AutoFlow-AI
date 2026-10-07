@@ -5,12 +5,19 @@
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
     <meta name="theme-color" content="#070a12" />
 
     <script>
-      try { document.documentElement.dataset.theme = localStorage.getItem("autoflow_theme") === "light" ? "light" : "dark"; }
-      catch { document.documentElement.dataset.theme = "dark"; }
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem("autoflow_theme") === "light" ? "light" : "dark";
+      } catch {
+        document.documentElement.dataset.theme = "dark";
+      }
     </script>
     <title>AutoFlow AI — Intelligent Document Automation</title>
 
@@ -20,28 +27,19 @@
     />
 
     <meta property="og:type" content="website" />
-    <meta
-      property="og:title"
-      content="AutoFlow AI — Intelligent Document Automation"
-    />
+    <meta property="og:title" content="AutoFlow AI — Intelligent Document Automation" />
     <meta
       property="og:description"
       content="AI-powered document workflow automation with grounded PDF intelligence, human approvals and auditable operations."
     />
-    <meta
-      property="og:url"
-      content="https://autoflow-ai-vishal.netlify.app"
-    />
+    <meta property="og:url" content="https://autoflow-ai-vishal.netlify.app" />
     <meta
       property="og:image"
       content="https://autoflow-ai-vishal.netlify.app/autoflow-social-preview.png"
     />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta
-      name="twitter:title"
-      content="AutoFlow AI — Intelligent Document Automation"
-    />
+    <meta name="twitter:title" content="AutoFlow AI — Intelligent Document Automation" />
     <meta
       name="twitter:description"
       content="AI-powered document workflow automation with grounded PDF intelligence and auditable operations."

@@ -20,7 +20,7 @@ const notificationSchema = new mongoose.Schema(
     actionPath: { type: String, default: "/dashboard" },
     metadata: { type: Object, default: () => ({}) },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 notificationSchema.index({ user: 1, createdAt: -1 });

@@ -9,10 +9,6 @@ const {
 
 const MAGIC = Buffer.from("AFBIO1");
 
-/* =====================================================
-   Biometric Encryption Key
-===================================================== */
-
 function getRootKey() {
   const configured = process.env.DOCUMENT_MASTER_KEY || "";
 
@@ -21,9 +17,7 @@ function getRootKey() {
   }
 
   if (process.env.NODE_ENV === "production") {
-    throw new Error(
-      "DOCUMENT_MASTER_KEY must be a 64-character hex value in production"
-    );
+    throw new Error("DOCUMENT_MASTER_KEY must be a 64-character hex value in production");
   }
 
   return crypto
@@ -39,18 +33,14 @@ function getBiometricKey() {
       getRootKey(),
       Buffer.from("AutoFlow-BioTrust-Salt-v1"),
       Buffer.from("biometric-face-reference-v1"),
-      32
-    )
+      32,
+    ),
   );
 }
 
 function sha256(value) {
   return crypto.createHash("sha256").update(value).digest("hex");
 }
-
-/* =====================================================
-   S3 Key
-===================================================== */
 
 function createBiometricKey(userId) {
   if (!userId) {
@@ -60,14 +50,8 @@ function createBiometricKey(userId) {
   return `biometrics/${userId}/face-reference.afbio`;
 }
 
-/* =====================================================
-   Encrypt Face Reference
-===================================================== */
-
 function encryptBiometricBuffer(input) {
-  const plaintext = Buffer.isBuffer(input)
-    ? input
-    : Buffer.from(input);
+  const plaintext = Buffer.isBuffer(input) ? input : Buffer.from(input);
 
   if (!plaintext.length) {
     throw new Error("Face image buffer is empty");
@@ -75,25 +59,13 @@ function encryptBiometricBuffer(input) {
 
   const iv = crypto.randomBytes(12);
 
-  const cipher = crypto.createCipheriv(
-    "aes-256-gcm",
-    getBiometricKey(),
-    iv
-  );
+  const cipher = crypto.createCipheriv("aes-256-gcm", getBiometricKey(), iv);
 
-  const ciphertext = Buffer.concat([
-    cipher.update(plaintext),
-    cipher.final(),
-  ]);
+  const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
 
   const authTag = cipher.getAuthTag();
 
-  const encryptedBuffer = Buffer.concat([
-    MAGIC,
-    iv,
-    authTag,
-    ciphertext,
-  ]);
+  const encryptedBuffer = Buffer.concat([MAGIC, iv, authTag, ciphertext]);
 
   return {
     encryptedBuffer,
@@ -101,61 +73,30 @@ function encryptBiometricBuffer(input) {
   };
 }
 
-/* =====================================================
-   Decrypt Face Reference
-===================================================== */
-
 function decryptBiometricBuffer(input) {
-  const payload = Buffer.isBuffer(input)
-    ? input
-    : Buffer.from(input);
+  const payload = Buffer.isBuffer(input) ? input : Buffer.from(input);
 
   if (!payload.subarray(0, MAGIC.length).equals(MAGIC)) {
     throw new Error("Invalid AutoFlow biometric payload");
   }
 
-  const iv = payload.subarray(
-    MAGIC.length,
-    MAGIC.length + 12
-  );
+  const iv = payload.subarray(MAGIC.length, MAGIC.length + 12);
 
-  const authTag = payload.subarray(
-    MAGIC.length + 12,
-    MAGIC.length + 28
-  );
+  const authTag = payload.subarray(MAGIC.length + 12, MAGIC.length + 28);
 
-  const ciphertext = payload.subarray(
-    MAGIC.length + 28
-  );
+  const ciphertext = payload.subarray(MAGIC.length + 28);
 
-  const decipher = crypto.createDecipheriv(
-    "aes-256-gcm",
-    getBiometricKey(),
-    iv
-  );
+  const decipher = crypto.createDecipheriv("aes-256-gcm", getBiometricKey(), iv);
 
   decipher.setAuthTag(authTag);
 
-  return Buffer.concat([
-    decipher.update(ciphertext),
-    decipher.final(),
-  ]);
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 }
 
-/* =====================================================
-   Save Face Reference
-===================================================== */
-
-async function saveFaceReference({
-  userId,
-  imageBuffer,
-}) {
+async function saveFaceReference({ userId, imageBuffer }) {
   const s3Key = createBiometricKey(userId);
 
-  const {
-    encryptedBuffer,
-    referenceHash,
-  } = encryptBiometricBuffer(imageBuffer);
+  const { encryptedBuffer, referenceHash } = encryptBiometricBuffer(imageBuffer);
 
   await uploadDocument({
     key: s3Key,
@@ -168,14 +109,7 @@ async function saveFaceReference({
   };
 }
 
-/* =====================================================
-   Get + Verify Face Reference
-===================================================== */
-
-async function getFaceReference({
-  s3Key,
-  referenceHash,
-}) {
+async function getFaceReference({ s3Key, referenceHash }) {
   if (!s3Key) {
     throw new Error("Face reference is not enrolled");
   }
@@ -186,37 +120,24 @@ async function getFaceReference({
     throw new Error("Encrypted face reference is missing");
   }
 
-  const encryptedBuffer =
-    await getDocumentBuffer(s3Key);
+  const encryptedBuffer = await getDocumentBuffer(s3Key);
 
   let plaintext;
 
   try {
-    plaintext =
-      decryptBiometricBuffer(encryptedBuffer);
+    plaintext = decryptBiometricBuffer(encryptedBuffer);
   } catch {
-    throw new Error(
-      "Biometric integrity verification failed"
-    );
+    throw new Error("Biometric integrity verification failed");
   }
 
   const currentHash = sha256(plaintext);
 
-  if (
-    referenceHash &&
-    currentHash !== referenceHash
-  ) {
-    throw new Error(
-      "Biometric reference fingerprint mismatch"
-    );
+  if (referenceHash && currentHash !== referenceHash) {
+    throw new Error("Biometric reference fingerprint mismatch");
   }
 
   return plaintext;
 }
-
-/* =====================================================
-   Delete Face Reference
-===================================================== */
 
 async function deleteFaceReference(s3Key) {
   if (!s3Key) return;

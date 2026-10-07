@@ -14,18 +14,18 @@ const publicUser = (user) => ({
   avatar: user.avatar || "",
 });
 
-const signToken = (user) => jwt.sign(
-  { id: user._id, tokenVersion: user.tokenVersion || 0 },
-  process.env.JWT_SECRET,
-  { expiresIn: "2h", issuer: "autoflow-ai", audience: "autoflow-workspace", algorithm: "HS256" }
-);
+const signToken = (user) =>
+  jwt.sign({ id: user._id, tokenVersion: user.tokenVersion || 0 }, process.env.JWT_SECRET, {
+    expiresIn: "2h",
+    issuer: "autoflow-ai",
+    audience: "autoflow-workspace",
+    algorithm: "HS256",
+  });
 
-// ================= REGISTER =================
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Check Empty Fields
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -33,7 +33,6 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Check Existing User
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
@@ -43,10 +42,8 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Hash Password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create User
     const user = await User.create({
       name,
       email,
@@ -58,7 +55,6 @@ const registerUser = async (req, res) => {
       message: "User Registered Successfully",
       user: publicUser(user),
     });
-
   } catch (error) {
     console.log(error);
 
@@ -69,12 +65,10 @@ const registerUser = async (req, res) => {
   }
 };
 
-// ================= LOGIN =================
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check Empty Fields
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -82,11 +76,16 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Find User
     const user = await User.findOne({ email });
 
     if (!user) {
-      await recordSecurityEvent({ req, type: "login", outcome: "blocked", severity: "medium", message: "Login attempted for an unknown account" });
+      await recordSecurityEvent({
+        req,
+        type: "login",
+        outcome: "blocked",
+        severity: "medium",
+        message: "Login attempted for an unknown account",
+      });
       return res.status(400).json({
         success: false,
         message: "User not found",
@@ -94,11 +93,22 @@ const loginUser = async (req, res) => {
     }
 
     if (user.lockUntil && user.lockUntil > new Date()) {
-      await recordSecurityEvent({ req, user: user._id, type: "login", outcome: "blocked", severity: "high", message: "Login blocked because the account is temporarily locked" });
-      return res.status(423).json({ success: false, message: "Account temporarily locked after repeated failed attempts. Try again later." });
+      await recordSecurityEvent({
+        req,
+        user: user._id,
+        type: "login",
+        outcome: "blocked",
+        severity: "high",
+        message: "Login blocked because the account is temporarily locked",
+      });
+      return res
+        .status(423)
+        .json({
+          success: false,
+          message: "Account temporarily locked after repeated failed attempts. Try again later.",
+        });
     }
 
-    // Compare Password
     if (!user.password) {
       return res.status(400).json({
         success: false,
@@ -112,7 +122,15 @@ const loginUser = async (req, res) => {
       user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
       if (user.failedLoginAttempts >= 5) user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
       await user.save();
-      await recordSecurityEvent({ req, user: user._id, type: "login", outcome: "blocked", severity: user.lockUntil ? "high" : "medium", message: "Invalid password rejected", metadata: { failedAttempts: user.failedLoginAttempts } });
+      await recordSecurityEvent({
+        req,
+        user: user._id,
+        type: "login",
+        outcome: "blocked",
+        severity: user.lockUntil ? "high" : "medium",
+        message: "Invalid password rejected",
+        metadata: { failedAttempts: user.failedLoginAttempts },
+      });
       return res.status(400).json({
         success: false,
         message: "Invalid Password",
@@ -122,10 +140,21 @@ const loginUser = async (req, res) => {
     user.failedLoginAttempts = 0;
     user.lockUntil = null;
     user.lastLoginAt = new Date();
-    user.lastLoginIpHash = crypto.createHash("sha256").update(req.ip || "unknown").digest("hex").slice(0, 16);
+    user.lastLoginIpHash = crypto
+      .createHash("sha256")
+      .update(req.ip || "unknown")
+      .digest("hex")
+      .slice(0, 16);
     await user.save();
     const token = signToken(user);
-    await recordSecurityEvent({ req, user: user._id, type: "login", outcome: "allowed", severity: "info", message: "Authenticated session created" });
+    await recordSecurityEvent({
+      req,
+      user: user._id,
+      type: "login",
+      outcome: "allowed",
+      severity: "info",
+      message: "Authenticated session created",
+    });
 
     res.status(200).json({
       success: true,
@@ -133,7 +162,6 @@ const loginUser = async (req, res) => {
       token,
       user: publicUser(user),
     });
-
   } catch (error) {
     console.log(error);
 
@@ -144,8 +172,6 @@ const loginUser = async (req, res) => {
   }
 };
 
-
-// ================= GOOGLE LOGIN =================
 const googleLogin = async (req, res) => {
   try {
     const { credential } = req.body;
@@ -261,9 +287,17 @@ const logoutUser = async (req, res) => {
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
     user.tokenVersion = (user.tokenVersion || 0) + 1;
     await user.save();
-    await recordSecurityEvent({ req, user: user._id, type: "logout", outcome: "allowed", message: "All active sessions were revoked" });
+    await recordSecurityEvent({
+      req,
+      user: user._id,
+      type: "logout",
+      outcome: "allowed",
+      message: "All active sessions were revoked",
+    });
     return res.json({ success: true, message: "Signed out securely" });
-  } catch (error) { return res.status(500).json({ success: false, message: error.message }); }
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 const getProfile = async (req, res) => {
@@ -300,7 +334,9 @@ const updateProfile = async (req, res) => {
     if (typeof req.body.avatar === "string") {
       const avatar = req.body.avatar;
       if (avatar && !/^data:image\/(jpeg|png|webp);base64,/i.test(avatar)) {
-        return res.status(400).json({ success: false, message: "Only JPG, PNG or WEBP images are allowed" });
+        return res
+          .status(400)
+          .json({ success: false, message: "Only JPG, PNG or WEBP images are allowed" });
       }
       if (avatar.length > 700000) {
         return res.status(400).json({ success: false, message: "Profile image is too large" });
@@ -323,4 +359,3 @@ module.exports = {
   updateProfile,
   logoutUser,
 };
-

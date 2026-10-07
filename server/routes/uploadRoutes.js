@@ -6,21 +6,11 @@ const path = require("path");
 const Document = require("../models/Document");
 const { protect } = require("../middleware/authMiddleware");
 const { addActivity } = require("../controllers/activityController");
-const {
-  analyzeDocument,
-} = require("../services/documentAutomationService");
-const {
-  runAutomationRules,
-} = require("../services/automationRuleEngine");
-const {
-  scanSensitiveData,
-} = require("../services/sensitiveDataScanner");
-const {
-  extractPageAwarePdf,
-} = require("../services/pdfEvidenceService");
-const {
-  createNotification,
-} = require("../services/notificationService");
+const { analyzeDocument } = require("../services/documentAutomationService");
+const { runAutomationRules } = require("../services/automationRuleEngine");
+const { scanSensitiveData } = require("../services/sensitiveDataScanner");
+const { extractPageAwarePdf } = require("../services/pdfEvidenceService");
+const { createNotification } = require("../services/notificationService");
 
 const {
   encryptBuffer,
@@ -34,15 +24,9 @@ const {
   deleteDocument,
 } = require("../services/s3StorageService");
 
-const {
-  recordSecurityEvent,
-} = require("../services/securityEventService");
+const { recordSecurityEvent } = require("../services/securityEventService");
 
 const router = express.Router();
-
-/* =====================================
-   Temporary Upload Directory
-===================================== */
 
 const uploadDirectory = path.join(process.cwd(), "uploads");
 
@@ -52,34 +36,19 @@ if (!fs.existsSync(uploadDirectory)) {
   });
 }
 
-/* =====================================
-   Temporary Multer Storage
-
-   Files stay here only while AutoFlow
-   extracts/processes them.
-
-   Permanent encrypted storage = AWS S3
-===================================== */
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDirectory);
   },
 
   filename: (req, file, cb) => {
-    const safeOriginalName = file.originalname
-      .replace(/\s+/g, "-")
-      .replace(/[^a-zA-Z0-9._-]/g, "");
+    const safeOriginalName = file.originalname.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "");
 
     const uniqueName = `${Date.now()}-${safeOriginalName}`;
 
     cb(null, uniqueName);
   },
 });
-
-/* =====================================
-   Allowed File Types
-===================================== */
 
 const allowedTypes = [
   "application/pdf",
@@ -120,10 +89,6 @@ const upload = multer({
   },
 });
 
-/* =====================================
-   Detect File Type
-===================================== */
-
 function getFileType(mimetype = "") {
   if (mimetype.includes("pdf")) return "pdf";
   if (mimetype.startsWith("image/")) return "image";
@@ -149,34 +114,20 @@ function getFileType(mimetype = "") {
   return "other";
 }
 
-/* =====================================
-   Safe Local Cleanup
-===================================== */
-
 function removeTemporaryFile(filePath) {
   try {
     if (filePath && fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
   } catch (error) {
-    console.error(
-      "Temporary file cleanup warning:",
-      error.message
-    );
+    console.error("Temporary file cleanup warning:", error.message);
   }
 }
-
-/* =====================================
-   Upload Route
-===================================== */
 
 router.post("/", protect, (req, res) => {
   upload.single("file")(req, res, async (uploadError) => {
     if (uploadError) {
-      console.error(
-        "Multer Error:",
-        uploadError.message
-      );
+      console.error("Multer Error:", uploadError.message);
 
       return res.status(400).json({
         success: false,
@@ -185,10 +136,6 @@ router.post("/", protect, (req, res) => {
     }
 
     try {
-      /* ---------------------------------
-         Validate upload
-      --------------------------------- */
-
       if (!req.file) {
         return res.status(400).json({
           success: false,
@@ -196,43 +143,24 @@ router.post("/", protect, (req, res) => {
         });
       }
 
-      const fileType = getFileType(
-        req.file.mimetype
-      );
-
-      /* ---------------------------------
-         Extract content BEFORE encryption
-      --------------------------------- */
+      const fileType = getFileType(req.file.mimetype);
 
       let extractedContent = "";
       let pageCount = 0;
 
       if (fileType === "pdf") {
-        const parsedPdf =
-          await extractPageAwarePdf(
-            req.file.path
-          );
+        const parsedPdf = await extractPageAwarePdf(req.file.path);
 
-        extractedContent =
-          parsedPdf.content;
+        extractedContent = parsedPdf.content;
 
-        pageCount =
-          parsedPdf.pages;
+        pageCount = parsedPdf.pages;
       }
 
       if (fileType === "txt") {
-        extractedContent =
-          fs.readFileSync(
-            req.file.path,
-            "utf8"
-          );
+        extractedContent = fs.readFileSync(req.file.path, "utf8");
 
         pageCount = 1;
       }
-
-      /* ---------------------------------
-         Automation analysis
-      --------------------------------- */
 
       const automation = analyzeDocument({
         filename: req.file.originalname,
@@ -240,399 +168,222 @@ router.post("/", protect, (req, res) => {
         pages: pageCount,
       });
 
-      /* ---------------------------------
-         Privacy + prompt injection scan
-      --------------------------------- */
+      const sensitiveData = scanSensitiveData(extractedContent);
 
-      const sensitiveData =
-        scanSensitiveData(
-          extractedContent
-        );
+      const promptInjection = detectPromptInjection(extractedContent);
 
-      const promptInjection =
-        detectPromptInjection(
-          extractedContent
-        );
+      const plaintextBuffer = fs.readFileSync(req.file.path);
 
-      /* =================================
-         AES-256-GCM ENCRYPTION
-      ================================= */
+      const encrypted = encryptBuffer(plaintextBuffer);
 
-      const plaintextBuffer =
-        fs.readFileSync(
-          req.file.path
-        );
+      const s3Key = createDocumentKey({
+        userId: req.user._id.toString(),
 
-      const encrypted =
-        encryptBuffer(
-          plaintextBuffer
-        );
-
-      /* =================================
-         CREATE PRIVATE S3 KEY
-      ================================= */
-
-      const s3Key =
-        createDocumentKey({
-          userId:
-            req.user._id.toString(),
-
-          filename:
-            req.file.originalname,
-        });
-
-      /* =================================
-         UPLOAD ENCRYPTED FILE TO AWS S3
-      ================================= */
+        filename: req.file.originalname,
+      });
 
       await uploadDocument({
         key: s3Key,
-        buffer:
-          encrypted.encryptedBuffer,
+        buffer: encrypted.encryptedBuffer,
       });
-
-      /*
-        Used only if something fails
-        before MongoDB document persistence.
-      */
 
       req.s3UploadKey = s3Key;
       req.s3UploadPersisted = false;
 
-      /* =================================
-         DELETE TEMPORARY RENDER FILE
-      ================================= */
+      removeTemporaryFile(req.file.path);
 
-      removeTemporaryFile(
-        req.file.path
-      );
+      const trust = calculateTrustScore({
+        integrityStatus: "verified",
 
-      /* =================================
-         TRUST SCORE
-      ================================= */
+        encrypted: true,
 
-      const trust =
-        calculateTrustScore({
-          integrityStatus:
-            "verified",
+        ownerBound: true,
 
-          encrypted: true,
+        injectionDetected: promptInjection.detected,
 
-          ownerBound: true,
+        sensitiveRisk: sensitiveData.riskLevel,
+      });
 
-          injectionDetected:
-            promptInjection.detected,
+      const document = await Document.create({
+        filename: req.file.originalname,
 
-          sensitiveRisk:
-            sensitiveData.riskLevel,
-        });
+        filepath: "",
 
-      /* =================================
-         SAVE METADATA IN MONGODB
-      ================================= */
+        storageProvider: "s3",
 
-      const document =
-        await Document.create({
-          filename:
-            req.file.originalname,
+        s3Key,
 
-          /*
-            No permanent local filepath.
-          */
+        storageStatus: "available",
 
-          filepath: "",
+        filesize: req.file.size,
 
-          storageProvider: "s3",
+        mimeType: req.file.mimetype,
 
-          s3Key,
+        fileType,
 
-          storageStatus:
-            "available",
+        content: extractedContent,
 
-          filesize:
-            req.file.size,
+        pages: pageCount,
 
-          mimeType:
-            req.file.mimetype,
+        summary: "",
 
-          fileType,
+        favorite: false,
 
-          content:
-            extractedContent,
+        pinned: false,
 
-          pages:
-            pageCount,
+        uploadedBy: req.user._id,
 
-          summary: "",
+        ...automation,
 
-          favorite: false,
+        sensitiveData,
 
-          pinned: false,
+        security: {
+          encryption: "AES-256-GCM",
 
-          uploadedBy:
-            req.user._id,
+          encryptedAt: new Date(),
 
-          ...automation,
+          plaintextHash: encrypted.plaintextHash,
 
-          sensitiveData,
+          encryptedHash: encrypted.encryptedHash,
 
-          security: {
-            encryption:
-              "AES-256-GCM",
+          iv: encrypted.iv,
 
-            encryptedAt:
-              new Date(),
+          integrityStatus: "verified",
 
-            plaintextHash:
-              encrypted.plaintextHash,
+          lastVerifiedAt: new Date(),
 
-            encryptedHash:
-              encrypted.encryptedHash,
+          promptInjection,
 
-            iv:
-              encrypted.iv,
+          trustScore: trust.score,
 
-            integrityStatus:
-              "verified",
+          trustGrade: trust.grade,
 
-            lastVerifiedAt:
-              new Date(),
-
-            promptInjection,
-
-            trustScore:
-              trust.score,
-
-            trustGrade:
-              trust.grade,
-
-            trustDimensions:
-              trust.dimensions,
-          },
-        });
-
-      /*
-        MongoDB record now points to S3.
-        Do NOT delete S3 object during
-        later notification/automation errors.
-      */
+          trustDimensions: trust.dimensions,
+        },
+      });
 
       req.s3UploadPersisted = true;
-
-      /* =================================
-         NON-CRITICAL POST PROCESSING
-      ================================= */
 
       try {
         await recordSecurityEvent({
           req,
 
-          user:
-            req.user._id,
+          user: req.user._id,
 
-          document:
-            document._id,
+          document: document._id,
 
-          type:
-            "secure-upload",
+          type: "secure-upload",
 
-          outcome:
-            promptInjection.detected
-              ? "warning"
-              : "allowed",
+          outcome: promptInjection.detected ? "warning" : "allowed",
 
-          severity:
-            promptInjection.detected
-              ? "high"
-              : "info",
+          severity: promptInjection.detected ? "high" : "info",
 
-          message:
-            promptInjection.detected
-              ? "Encrypted S3 upload quarantined for prompt-injection review"
-              : "Document encrypted, stored in private S3, and integrity fingerprint recorded",
+          message: promptInjection.detected
+            ? "Encrypted S3 upload quarantined for prompt-injection review"
+            : "Document encrypted, stored in private S3, and integrity fingerprint recorded",
 
           metadata: {
-            trustScore:
-              trust.score,
+            trustScore: trust.score,
 
-            storageProvider:
-              "s3",
+            storageProvider: "s3",
           },
         });
 
-        await addActivity(
-          "Uploaded Document",
-          document.filename,
-          "upload",
-          "indigo",
-          req.user._id
-        );
+        await addActivity("Uploaded Document", document.filename, "upload", "indigo", req.user._id);
 
         await createNotification({
-          user:
-            req.user._id,
+          user: req.user._id,
 
-          type:
-            "upload",
+          type: "upload",
 
-          title:
-            "Document processed",
+          title: "Document processed",
 
-          message:
-            `${document.filename} was classified as ${document.classification} with ${document.priority} priority.`,
+          message: `${document.filename} was classified as ${document.classification} with ${document.priority} priority.`,
 
-          document:
-            document._id,
+          document: document._id,
 
-          actionPath:
-            document.fileType === "pdf"
-              ? `/evidence/${document._id}`
-              : "/documents",
+          actionPath: document.fileType === "pdf" ? `/evidence/${document._id}` : "/documents",
         });
 
-        if (
-          document.workflowStatus ===
-          "review"
-        ) {
+        if (document.workflowStatus === "review") {
           await createNotification({
-            user:
-              req.user._id,
+            user: req.user._id,
 
-            type:
-              "review",
+            type: "review",
 
-            title:
-              "Approval required",
+            title: "Approval required",
 
-            message:
-              `${document.filename} needs a human decision before the workflow can continue.`,
+            message: `${document.filename} needs a human decision before the workflow can continue.`,
 
-            document:
-              document._id,
+            document: document._id,
 
-            actionPath:
-              "/approvals",
+            actionPath: "/approvals",
           });
         }
 
-        if (
-          sensitiveData.totalFindings >
-          0
-        ) {
+        if (sensitiveData.totalFindings > 0) {
           await createNotification({
-            user:
-              req.user._id,
+            user: req.user._id,
 
-            type:
-              "security",
+            type: "security",
 
-            title:
-              `${sensitiveData.riskLevel} privacy risk detected`,
+            title: `${sensitiveData.riskLevel} privacy risk detected`,
 
-            message:
-              `${sensitiveData.totalFindings} sensitive data finding(s) were masked in ${document.filename}.`,
+            message: `${sensitiveData.totalFindings} sensitive data finding(s) were masked in ${document.filename}.`,
 
-            document:
-              document._id,
+            document: document._id,
 
-            actionPath:
-              "/security",
+            actionPath: "/security",
           });
         }
 
         await runAutomationRules({
           document,
 
-          userId:
-            req.user._id,
+          userId: req.user._id,
 
-          trigger:
-            "Document uploaded",
+          trigger: "Document uploaded",
         });
 
-        if (
-          ["high", "critical"].includes(
-            document.priority
-          )
-        ) {
+        if (["high", "critical"].includes(document.priority)) {
           await runAutomationRules({
             document,
 
-            userId:
-              req.user._id,
+            userId: req.user._id,
 
-            trigger:
-              "High priority detected",
+            trigger: "High priority detected",
           });
         }
       } catch (postProcessingError) {
-        /*
-          Upload itself is already safe.
-          Notification/automation failure
-          should not delete S3 document.
-        */
-
-        console.error(
-          "Post-upload processing warning:",
-          postProcessingError.message
-        );
+        console.error("Post-upload processing warning:", postProcessingError.message);
       }
-
-      /* =================================
-         SUCCESS
-      ================================= */
 
       return res.status(201).json({
         success: true,
 
-        message:
-          "File securely uploaded to AWS S3",
+        message: "File securely uploaded to AWS S3",
 
         document,
       });
     } catch (error) {
-      console.error(
-        "Upload Error:",
-        error
-      );
+      console.error("Upload Error:", error);
 
-      /* =================================
-         ROLLBACK S3 ONLY IF DATABASE
-         DID NOT SUCCESSFULLY PERSIST IT
-      ================================= */
-
-      if (
-        req.s3UploadKey &&
-        !req.s3UploadPersisted
-      ) {
+      if (req.s3UploadKey && !req.s3UploadPersisted) {
         try {
-          await deleteDocument(
-            req.s3UploadKey
-          );
+          await deleteDocument(req.s3UploadKey);
         } catch (cleanupError) {
-          console.error(
-            "S3 cleanup failed:",
-            cleanupError.message
-          );
+          console.error("S3 cleanup failed:", cleanupError.message);
         }
       }
 
-      /* =================================
-         CLEAN LOCAL TEMP FILE
-      ================================= */
-
       if (req.file?.path) {
-        removeTemporaryFile(
-          req.file.path
-        );
+        removeTemporaryFile(req.file.path);
       }
 
       return res.status(500).json({
         success: false,
 
-        message:
-          error.message ||
-          "File upload failed",
+        message: error.message || "File upload failed",
       });
     }
   });

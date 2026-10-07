@@ -63,9 +63,7 @@ export default function AuthPage({ mode }) {
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
 
-    toast.success(
-      `Welcome${data.user?.name ? `, ${data.user.name}` : ""}`
-    );
+    toast.success(`Welcome${data.user?.name ? `, ${data.user.name}` : ""}`);
 
     navigate("/dashboard");
   };
@@ -95,9 +93,7 @@ export default function AuthPage({ mode }) {
 
       finishLogin(data);
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Unable to continue"
-      );
+      toast.error(error.response?.data?.message || "Unable to continue");
     } finally {
       setLoading(false);
     }
@@ -120,10 +116,7 @@ export default function AuthPage({ mode }) {
     } catch (error) {
       console.error("Google login error:", error);
 
-      toast.error(
-        error.response?.data?.message ||
-          "Google sign-in failed"
-      );
+      toast.error(error.response?.data?.message || "Google sign-in failed");
     } finally {
       setGoogleLoading(false);
     }
@@ -160,9 +153,8 @@ export default function AuthPage({ mode }) {
           </h1>
 
           <p>
-            Automate document workflows with encrypted cloud
-            storage, verifiable evidence and risk-adaptive
-            identity protection.
+            Automate document workflows with encrypted cloud storage, verifiable evidence and
+            risk-adaptive identity protection.
           </p>
 
           <div className="af-auth2-features">
@@ -206,11 +198,7 @@ export default function AuthPage({ mode }) {
               SECURE ACCESS
             </span>
 
-            <h2>
-              {register
-                ? "Create your workspace"
-                : "Welcome back"}
-            </h2>
+            <h2>{register ? "Create your workspace" : "Welcome back"}</h2>
 
             <p>
               {register
@@ -219,17 +207,9 @@ export default function AuthPage({ mode }) {
             </p>
           </div>
 
-          <div
-            className={
-              googleLoading
-                ? "af-auth2-google is-loading"
-                : "af-auth2-google"
-            }
-          >
+          <div className={googleLoading ? "af-auth2-google is-loading" : "af-auth2-google"}>
             {googleLoading ? (
-              <div className="af-auth2-google-loading">
-                Connecting to Google...
-              </div>
+              <div className="af-auth2-google-loading">Connecting to Google...</div>
             ) : (
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
@@ -237,11 +217,7 @@ export default function AuthPage({ mode }) {
                 theme="outline"
                 size="large"
                 shape="rectangular"
-                text={
-                  register
-                    ? "signup_with"
-                    : "signin_with"
-                }
+                text={register ? "signup_with" : "signin_with"}
                 width="360"
               />
             )}
@@ -253,10 +229,7 @@ export default function AuthPage({ mode }) {
             <span />
           </div>
 
-          <form
-            onSubmit={submit}
-            className="af-auth2-form"
-          >
+          <form onSubmit={submit} className="af-auth2-form">
             {register && (
               <label>
                 <span>Full name</span>
@@ -301,16 +274,8 @@ export default function AuthPage({ mode }) {
                 <input
                   required
                   minLength={6}
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
-                  autoComplete={
-                    register
-                      ? "new-password"
-                      : "current-password"
-                  }
+                  type={showPassword ? "text" : "password"}
+                  autoComplete={register ? "new-password" : "current-password"}
                   value={form.password}
                   onChange={(event) =>
                     setForm({
@@ -318,69 +283,33 @@ export default function AuthPage({ mode }) {
                       password: event.target.value,
                     })
                   }
-                  placeholder={
-                    register
-                      ? "Minimum 6 characters"
-                      : "Enter your password"
-                  }
+                  placeholder={register ? "Minimum 6 characters" : "Enter your password"}
                 />
 
                 <button
                   type="button"
-                  aria-label={
-                    showPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
-                  onClick={() =>
-                    setShowPassword(
-                      (current) => !current
-                    )
-                  }
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((current) => !current)}
                 >
-                  {showPassword ? (
-                    <EyeOff size={18} />
-                  ) : (
-                    <Eye size={18} />
-                  )}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </label>
 
-            <button
-              type="submit"
-              className="af-auth2-submit"
-              disabled={loading || googleLoading}
-            >
+            <button type="submit" className="af-auth2-submit" disabled={loading || googleLoading}>
               <span>
-                {loading
-                  ? "Please wait..."
-                  : register
-                    ? "Create workspace"
-                    : "Sign in securely"}
+                {loading ? "Please wait..." : register ? "Create workspace" : "Sign in securely"}
               </span>
 
-              {!loading && (
-                <ArrowRight size={18} />
-              )}
+              {!loading && <ArrowRight size={18} />}
             </button>
           </form>
 
           <div className="af-auth2-switch">
-            {register
-              ? "Already have an AutoFlow account?"
-              : "New to AutoFlow AI?"}
+            {register ? "Already have an AutoFlow account?" : "New to AutoFlow AI?"}
 
-            <Link
-              to={
-                register
-                  ? "/login"
-                  : "/register"
-              }
-            >
-              {register
-                ? "Sign in"
-                : "Create account"}
+            <Link to={register ? "/login" : "/register"}>
+              {register ? "Sign in" : "Create account"}
             </Link>
           </div>
 

@@ -1,8 +1,6 @@
 const Document = require("../models/Document");
 
-const {
-  chatWithPdf: askPdf,
-} = require("../services/groqService");
+const { chatWithPdf: askPdf } = require("../services/groqService");
 
 const {
   verifyDocumentIntegrity,
@@ -10,25 +8,11 @@ const {
   detectPromptInjection,
 } = require("../services/documentSecurityService");
 
-const {
-  documentExists,
-  getDocumentBuffer,
-} = require("../services/s3StorageService");
+const { documentExists, getDocumentBuffer } = require("../services/s3StorageService");
 
-const {
-  recordSecurityEvent,
-} = require("../services/securityEventService");
-
-/* =====================================================
-   Verify Document Storage + Integrity
-   Supports AWS S3 and legacy local files
-===================================================== */
+const { recordSecurityEvent } = require("../services/securityEventService");
 
 async function verifyStoredDocument(document) {
-  /* -----------------------------
-     AWS S3 document
-  ----------------------------- */
-
   if (document.storageProvider === "s3") {
     if (!document.s3Key) {
       return {
@@ -38,9 +22,7 @@ async function verifyStoredDocument(document) {
       };
     }
 
-    const exists = await documentExists(
-      document.s3Key
-    );
+    const exists = await documentExists(document.s3Key);
 
     if (!exists) {
       return {
@@ -50,59 +32,31 @@ async function verifyStoredDocument(document) {
       };
     }
 
-    const encryptedBuffer =
-      await getDocumentBuffer(
-        document.s3Key
-      );
+    const encryptedBuffer = await getDocumentBuffer(document.s3Key);
 
-    return verifyDocumentIntegrityBuffer(
-      document,
-      encryptedBuffer
-    );
+    return verifyDocumentIntegrityBuffer(document, encryptedBuffer);
   }
 
-  /* -----------------------------
-     Legacy local document
-  ----------------------------- */
-
-  return verifyDocumentIntegrity(
-    document
-  );
+  return verifyDocumentIntegrity(document);
 }
-
-/* =====================================================
-   Chat With PDF
-===================================================== */
 
 const chatWithPdf = async (req, res) => {
   try {
     const { id } = req.params;
     const { question } = req.body;
 
-    /* =================================
-       VALIDATE QUESTION
-    ================================= */
-
-    if (
-      !question ||
-      !question.trim()
-    ) {
+    if (!question || !question.trim()) {
       return res.status(400).json({
         success: false,
         message: "Question is required",
       });
     }
 
-    /* =================================
-       FIND OWNER'S DOCUMENT
-    ================================= */
-
-    const document =
-      await Document.findOne({
-        _id: id,
-        uploadedBy: req.user._id,
-        deleted: false,
-      });
+    const document = await Document.findOne({
+      _id: id,
+      uploadedBy: req.user._id,
+      deleted: false,
+    });
 
     if (!document) {
       return res.status(404).json({
@@ -111,34 +65,21 @@ const chatWithPdf = async (req, res) => {
       });
     }
 
-    /* =================================
-       STORAGE + INTEGRITY VERIFICATION
-    ================================= */
-
-    const integrity =
-      await verifyStoredDocument(
-        document
-      );
+    const integrity = await verifyStoredDocument(document);
 
     if (!integrity.valid) {
-      document.storageStatus =
-        integrity.status === "missing"
-          ? "missing"
-          : document.storageStatus;
+      document.storageStatus = integrity.status === "missing" ? "missing" : document.storageStatus;
 
       document.security = {
         ...document.security,
 
-        integrityStatus:
-          integrity.status,
+        integrityStatus: integrity.status,
 
-        lastVerifiedAt:
-          new Date(),
+        lastVerifiedAt: new Date(),
 
         trustScore: 0,
 
-        trustGrade:
-          "restricted",
+        trustGrade: "restricted",
       };
 
       await document.save();
@@ -146,42 +87,28 @@ const chatWithPdf = async (req, res) => {
       await recordSecurityEvent({
         req,
 
-        user:
-          req.user._id,
+        user: req.user._id,
 
-        document:
-          document._id,
+        document: document._id,
 
-        type:
-          "ai-retrieval",
+        type: "ai-retrieval",
 
-        outcome:
-          "blocked",
+        outcome: "blocked",
 
-        severity:
-          integrity.status === "missing"
-            ? "high"
-            : "critical",
+        severity: integrity.status === "missing" ? "high" : "critical",
 
-        message:
-          `AI retrieval blocked: ${integrity.reason}`,
+        message: `AI retrieval blocked: ${integrity.reason}`,
 
         metadata: {
-          storageProvider:
-            document.storageProvider ||
-            "local",
+          storageProvider: document.storageProvider || "local",
         },
       });
 
-      if (
-        integrity.status ===
-        "missing"
-      ) {
+      if (integrity.status === "missing") {
         return res.status(404).json({
           success: false,
 
-          code:
-            "FILE_UNAVAILABLE",
+          code: "FILE_UNAVAILABLE",
 
           message:
             "Document file is unavailable. Please re-upload the original file before using AI Copilot.",
@@ -191,239 +118,125 @@ const chatWithPdf = async (req, res) => {
       return res.status(409).json({
         success: false,
 
-        code:
-          "INTEGRITY_FAILURE",
+        code: "INTEGRITY_FAILURE",
 
-        message:
-          "AI access blocked because document integrity could not be verified.",
+        message: "AI access blocked because document integrity could not be verified.",
       });
     }
 
-    /* =================================
-       USER QUERY PROMPT-INJECTION CHECK
+    const questionInjection = detectPromptInjection(question.trim());
 
-       Important:
-       Only the USER QUESTION can block
-       the request here.
-
-       Prompt-like text inside the PDF is
-       treated as untrusted document
-       evidence, not executable instruction.
-    ================================= */
-
-    const questionInjection =
-      detectPromptInjection(
-        question.trim()
-      );
-
-    const documentInjectionDetected =
-      Boolean(
-        document.security
-          ?.promptInjection
-          ?.detected
-      );
+    const documentInjectionDetected = Boolean(document.security?.promptInjection?.detected);
 
     if (questionInjection.detected) {
       await recordSecurityEvent({
         req,
 
-        user:
-          req.user._id,
+        user: req.user._id,
 
-        document:
-          document._id,
+        document: document._id,
 
-        type:
-          "prompt-injection",
+        type: "prompt-injection",
 
-        outcome:
-          "blocked",
+        outcome: "blocked",
 
-        severity:
-          "high",
+        severity: "high",
 
-        message:
-          "Potential prompt-injection attempt in user query blocked",
+        message: "Potential prompt-injection attempt in user query blocked",
 
         metadata: {
-          source:
-            "user-query",
+          source: "user-query",
 
-          queryMatchCount:
-            questionInjection.matchCount,
+          queryMatchCount: questionInjection.matchCount,
 
-          matchedRules:
-            questionInjection.rules,
+          matchedRules: questionInjection.rules,
         },
       });
 
       return res.status(400).json({
         success: false,
 
-        code:
-          "CONTEXT_SECURITY_BLOCK",
+        code: "CONTEXT_SECURITY_BLOCK",
 
-        message:
-          "This request was blocked by the AutoFlow-AI context security policy.",
+        message: "This request was blocked by the AutoFlow-AI context security policy.",
       });
     }
 
-    /* =================================
-       VERIFY EXTRACTED PDF CONTENT
-    ================================= */
-
-    if (
-      !document.content ||
-      document.content.trim() === ""
-    ) {
+    if (!document.content || document.content.trim() === "") {
       return res.status(400).json({
         success: false,
 
-        code:
-          "CONTENT_UNAVAILABLE",
+        code: "CONTENT_UNAVAILABLE",
 
-        message:
-          "PDF content is unavailable. Please re-upload the document.",
+        message: "PDF content is unavailable. Please re-upload the document.",
       });
     }
 
-    /* =================================
-       REDUCE TOKEN USAGE
-    ================================= */
+    let pdfContent = document.content;
 
-    let pdfContent =
-      document.content;
+    const normalizedQuestion = question.trim().toLowerCase();
 
-    const normalizedQuestion =
-      question
-        .trim()
-        .toLowerCase();
-
-    const index =
-      pdfContent
-        .toLowerCase()
-        .indexOf(
-          normalizedQuestion
-        );
+    const index = pdfContent.toLowerCase().indexOf(normalizedQuestion);
 
     if (index !== -1) {
-      const proposedStart =
-        Math.max(
-          0,
-          index - 2500
-        );
+      const proposedStart = Math.max(0, index - 2500);
 
-      const pageMarker =
-        pdfContent.lastIndexOf(
-          "[PAGE ",
-          proposedStart
-        );
+      const pageMarker = pdfContent.lastIndexOf("[PAGE ", proposedStart);
 
-      pdfContent =
-        pdfContent.substring(
-          pageMarker >= 0
-            ? pageMarker
-            : proposedStart,
+      pdfContent = pdfContent.substring(
+        pageMarker >= 0 ? pageMarker : proposedStart,
 
-          index + 4500
-        );
+        index + 4500,
+      );
     } else {
-      pdfContent =
-        pdfContent.substring(
-          0,
-          12000
-        );
+      pdfContent = pdfContent.substring(0, 12000);
     }
 
-    /* =================================
-       GROQ / AI REQUEST
+    const answer = await askPdf(pdfContent, question.trim());
 
-       groqService system prompt already
-       tells the model to treat PDF content
-       as evidence, not instructions.
-    ================================= */
+    document.aiChats = (document.aiChats || 0) + 1;
 
-    const answer =
-      await askPdf(
-        pdfContent,
-        question.trim()
-      );
-
-    /* =================================
-       UPDATE SECURITY + ANALYTICS
-    ================================= */
-
-    document.aiChats =
-      (document.aiChats || 0) + 1;
-
-    document.storageStatus =
-      "available";
+    document.storageStatus = "available";
 
     document.security = {
       ...document.security,
 
-      integrityStatus:
-        "verified",
+      integrityStatus: "verified",
 
-      lastVerifiedAt:
-        new Date(),
+      lastVerifiedAt: new Date(),
     };
 
     await document.save();
 
-    /* =================================
-       AUDIT SUCCESSFUL AI RETRIEVAL
-    ================================= */
-
     await recordSecurityEvent({
       req,
 
-      user:
-        req.user._id,
+      user: req.user._id,
 
-      document:
-        document._id,
+      document: document._id,
 
-      type:
-        "ai-retrieval",
+      type: "ai-retrieval",
 
-      outcome:
-        "allowed",
+      outcome: "allowed",
 
-      severity:
-        documentInjectionDetected
-          ? "medium"
-          : "info",
+      severity: documentInjectionDetected ? "medium" : "info",
 
-      message:
-        documentInjectionDetected
-          ? "Evidence-grounded AI retrieval completed while document prompt-like text remained isolated as untrusted evidence"
-          : "Authorized evidence-grounded AI retrieval completed",
+      message: documentInjectionDetected
+        ? "Evidence-grounded AI retrieval completed while document prompt-like text remained isolated as untrusted evidence"
+        : "Authorized evidence-grounded AI retrieval completed",
 
       metadata: {
-        storageProvider:
-          document.storageProvider ||
-          "local",
+        storageProvider: document.storageProvider || "local",
 
-        integrity:
-          "verified",
+        integrity: "verified",
 
-        documentPromptInjectionDetected:
-          documentInjectionDetected,
+        documentPromptInjectionDetected: documentInjectionDetected,
 
-        documentPromptMatchCount:
-          document.security
-            ?.promptInjection
-            ?.matchCount || 0,
+        documentPromptMatchCount: document.security?.promptInjection?.matchCount || 0,
 
-        userQueryPromptInjectionDetected:
-          false,
+        userQueryPromptInjectionDetected: false,
       },
     });
-
-    /* =================================
-       SUCCESS
-    ================================= */
 
     return res.status(200).json({
       success: true,
@@ -431,40 +244,26 @@ const chatWithPdf = async (req, res) => {
       answer,
 
       security: {
-        integrity:
-          "verified",
+        integrity: "verified",
 
-        accessPolicy:
-          "owner-only",
+        accessPolicy: "owner-only",
 
-        evidenceBound:
-          true,
+        evidenceBound: true,
 
-        storage:
-          document.storageProvider ||
-          "local",
+        storage: document.storageProvider || "local",
 
-        documentInstructions:
-          documentInjectionDetected
-            ? "isolated"
-            : "clear",
+        documentInstructions: documentInjectionDetected ? "isolated" : "clear",
 
-        userQuery:
-          "safe",
+        userQuery: "safe",
       },
     });
   } catch (error) {
-    console.error(
-      "Chat Error:",
-      error
-    );
+    console.error("Chat Error:", error);
 
     return res.status(500).json({
       success: false,
 
-      message:
-        error.message ||
-        "AI Copilot request failed",
+      message: error.message || "AI Copilot request failed",
     });
   }
 };

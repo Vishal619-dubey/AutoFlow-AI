@@ -18,12 +18,10 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const biometricRoutes = require("./routes/biometricRoutes");
 const { rateLimit } = require("./middleware/rateLimitMiddleware");
 
-// Connect MongoDB
 connectDB();
 
 const app = express();
 
-// Frontend URLs allowed to access this API
 const allowedOrigins = [
   "http://localhost:5173",
   "https://jade-klepon-08bba1.netlify.app",
@@ -31,11 +29,9 @@ const allowedOrigins = [
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
-// CORS middleware
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow Postman, server-to-server requests and approved frontends
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -45,17 +41,22 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-BioTrust-Proof"],
-  })
+  }),
 );
 
-// Request body middleware
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", rateLimit({ windowMs: 60_000, max: 180 }));
-app.use("/api/auth", rateLimit({ windowMs: 15 * 60_000, max: 30, message: "Too many authentication attempts. Try again later." }));
+app.use(
+  "/api/auth",
+  rateLimit({
+    windowMs: 15 * 60_000,
+    max: 30,
+    message: "Too many authentication attempts. Try again later.",
+  }),
+);
 
-// API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/documents", documentRoutes);
@@ -68,7 +69,6 @@ app.use("/api/security", securityRoutes);
 app.use("/api/biometric", biometricRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-// Health check
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
@@ -76,7 +76,6 @@ app.get("/", (req, res) => {
   });
 });
 
-// Unknown route
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -84,7 +83,6 @@ app.use((req, res) => {
   });
 });
 
-// Global error handler
 app.use((error, req, res, next) => {
   console.error("Server Error:", error.message);
 
@@ -94,7 +92,6 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Render automatically provides PORT
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

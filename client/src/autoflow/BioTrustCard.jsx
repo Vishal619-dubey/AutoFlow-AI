@@ -1,13 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Camera,
-  CheckCircle2,
-  RefreshCw,
-  ShieldAlert,
-  ShieldCheck,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Camera, CheckCircle2, RefreshCw, ShieldAlert, ShieldCheck, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
 import API from "../services/api";
 
@@ -32,11 +24,7 @@ export default function BioTrustCard() {
 
       const { data } = await API.get("/biometric/status");
 
-      const faceAuth =
-        data.faceAuth ||
-        data.biometric ||
-        data.status ||
-        {};
+      const faceAuth = data.faceAuth || data.biometric || data.status || {};
 
       setStatus({
         enabled: Boolean(faceAuth.enabled),
@@ -51,10 +39,7 @@ export default function BioTrustCard() {
       console.error("BioTrust status error:", error);
 
       if (error.response?.status !== 401) {
-        toast.error(
-          error.response?.data?.message ||
-            "Unable to load BioTrust status"
-        );
+        toast.error(error.response?.data?.message || "Unable to load BioTrust status");
       }
     } finally {
       setLoadingStatus(false);
@@ -71,9 +56,7 @@ export default function BioTrustCard() {
 
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current
-        .getTracks()
-        .forEach((track) => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
 
       streamRef.current = null;
     }
@@ -86,10 +69,7 @@ export default function BioTrustCard() {
   };
 
   const openCamera = async (nextMode) => {
-    if (
-      !window.isSecureContext ||
-      !navigator.mediaDevices?.getUserMedia
-    ) {
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
       setMode(nextMode);
       mobileCameraRef.current?.click();
       return;
@@ -101,19 +81,18 @@ export default function BioTrustCard() {
       setMode(nextMode);
       setCameraOpen(true);
 
-      const stream =
-        await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: "user",
-            width: {
-              ideal: 1280,
-            },
-            height: {
-              ideal: 720,
-            },
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user",
+          width: {
+            ideal: 1280,
           },
-          audio: false,
-        });
+          height: {
+            ideal: 720,
+          },
+        },
+        audio: false,
+      });
 
       streamRef.current = stream;
 
@@ -127,22 +106,15 @@ export default function BioTrustCard() {
 
       setCameraOpen(false);
 
-      if (
-        error.name === "NotAllowedError" ||
-        error.name === "PermissionDeniedError"
-      ) {
-        toast.error(
-          "Camera permission was blocked. Please allow camera access."
-        );
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+        toast.error("Camera permission was blocked. Please allow camera access.");
       } else if (error.name === "NotFoundError") {
-        toast.error(
-          "No camera was found on this device."
-        );
+        toast.error("No camera was found on this device.");
       } else {
         console.warn(
           "Live camera unavailable, using native camera fallback:",
           error.name,
-          error.message
+          error.message,
         );
 
         setMode(nextMode);
@@ -161,38 +133,21 @@ export default function BioTrustCard() {
 
       const body = new FormData();
 
-      body.append(
-        "face",
-        file,
-        file.name || "biotrust-mobile.jpg"
-      );
+      body.append("face", file, file.name || "biotrust-mobile.jpg");
 
-      const endpoint =
-        mode === "enroll"
-          ? "/biometric/enroll"
-          : "/biometric/verify";
+      const endpoint = mode === "enroll" ? "/biometric/enroll" : "/biometric/verify";
 
-      const { data } =
-        await API.post(endpoint, body);
+      const { data } = await API.post(endpoint, body);
 
       toast.success(
-        data.message ||
-          (mode === "enroll"
-            ? "Face enrolled successfully"
-            : "Identity verified")
+        data.message || (mode === "enroll" ? "Face enrolled successfully" : "Identity verified"),
       );
 
       await loadStatus();
     } catch (error) {
-      console.error(
-        "BioTrust mobile capture error:",
-        error
-      );
+      console.error("BioTrust mobile capture error:", error);
 
-      toast.error(
-        error.response?.data?.message ||
-          "BioTrust operation failed"
-      );
+      toast.error(error.response?.data?.message || "BioTrust operation failed");
     } finally {
       event.target.value = "";
       setProcessing(false);
@@ -203,57 +158,30 @@ export default function BioTrustCard() {
     return new Promise((resolve, reject) => {
       const video = videoRef.current;
 
-      if (
-        !video ||
-        !video.videoWidth ||
-        !video.videoHeight
-      ) {
-        reject(
-          new Error(
-            "Camera is not ready yet."
-          )
-        );
+      if (!video || !video.videoWidth || !video.videoHeight) {
+        reject(new Error("Camera is not ready yet."));
 
         return;
       }
 
-      const canvas =
-        document.createElement("canvas");
+      const canvas = document.createElement("canvas");
 
       const maxWidth = 900;
 
-      const scale = Math.min(
-        1,
-        maxWidth / video.videoWidth
-      );
+      const scale = Math.min(1, maxWidth / video.videoWidth);
 
-      canvas.width = Math.round(
-        video.videoWidth * scale
-      );
+      canvas.width = Math.round(video.videoWidth * scale);
 
-      canvas.height = Math.round(
-        video.videoHeight * scale
-      );
+      canvas.height = Math.round(video.videoHeight * scale);
 
-      const context =
-        canvas.getContext("2d");
+      const context = canvas.getContext("2d");
 
-      context.drawImage(
-        video,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob(
         (blob) => {
           if (!blob) {
-            reject(
-              new Error(
-                "Unable to capture face image."
-              )
-            );
+            reject(new Error("Unable to capture face image."));
 
             return;
           }
@@ -261,7 +189,7 @@ export default function BioTrustCard() {
           resolve(blob);
         },
         "image/jpeg",
-        0.9
+        0.9,
       );
     });
   };
@@ -270,95 +198,51 @@ export default function BioTrustCard() {
     try {
       setProcessing(true);
 
-      const faceBlob =
-        await captureFace();
+      const faceBlob = await captureFace();
 
-      const body =
-        new FormData();
+      const body = new FormData();
 
-      body.append(
-        "face",
-        faceBlob,
-        "biotrust-face.jpg"
-      );
+      body.append("face", faceBlob, "biotrust-face.jpg");
 
       if (mode === "enroll") {
-        const { data } =
-          await API.post(
-            "/biometric/enroll",
-            body
-          );
+        const { data } = await API.post("/biometric/enroll", body);
 
-        toast.success(
-          data.message ||
-            "Face enrolled successfully"
-        );
+        toast.success(data.message || "Face enrolled successfully");
       } else {
-        const { data } =
-          await API.post(
-            "/biometric/verify",
-            body
-          );
+        const { data } = await API.post("/biometric/verify", body);
 
-        const similarity =
-          data.similarity !== undefined
-            ? ` ${data.similarity}% similarity.`
-            : "";
+        const similarity = data.similarity !== undefined ? ` ${data.similarity}% similarity.` : "";
 
-        toast.success(
-          `${
-            data.message ||
-            "Identity verified"
-          }${similarity}`
-        );
+        toast.success(`${data.message || "Identity verified"}${similarity}`);
       }
 
       stopCamera();
 
       await loadStatus();
     } catch (error) {
-      console.error(
-        "BioTrust operation error:",
-        error
-      );
+      console.error("BioTrust operation error:", error);
 
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "BioTrust operation failed"
-      );
+      toast.error(error.response?.data?.message || error.message || "BioTrust operation failed");
     } finally {
       setProcessing(false);
     }
   };
 
   const removeEnrollment = async () => {
-    const confirmed =
-      window.confirm(
-        "Remove your BioTrust face enrollment?"
-      );
+    const confirmed = window.confirm("Remove your BioTrust face enrollment?");
 
     if (!confirmed) return;
 
     try {
       setProcessing(true);
 
-      const { data } =
-        await API.delete(
-          "/biometric/enroll"
-        );
+      const { data } = await API.delete("/biometric/enroll");
 
-      toast.success(
-        data.message ||
-          "Face enrollment removed"
-      );
+      toast.success(data.message || "Face enrollment removed");
 
       await loadStatus();
     } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-          "Unable to remove face enrollment"
-      );
+      toast.error(error.response?.data?.message || "Unable to remove face enrollment");
     } finally {
       setProcessing(false);
     }
@@ -367,9 +251,7 @@ export default function BioTrustCard() {
   const formatDate = (value) => {
     if (!value) return "Not yet";
 
-    return new Date(
-      value
-    ).toLocaleString();
+    return new Date(value).toLocaleString();
   };
 
   return (
@@ -390,32 +272,18 @@ export default function BioTrustCard() {
           </div>
 
           <div>
-            <span className="biotrust-label">
-              ADAPTIVE BIOMETRIC SECURITY
-            </span>
+            <span className="biotrust-label">ADAPTIVE BIOMETRIC SECURITY</span>
 
-            <h2>
-              AutoFlow BioTrust
-            </h2>
+            <h2>AutoFlow BioTrust</h2>
 
             <p>
-              Add camera-based face verification
-              for sensitive document actions.
-              Your enrolled reference is encrypted
-              before being stored in private AWS S3.
+              Add camera-based face verification for sensitive document actions. Your enrolled
+              reference is encrypted before being stored in private AWS S3.
             </p>
           </div>
 
-          <div
-            className={`biotrust-state ${
-              status.enrolled
-                ? "active"
-                : "inactive"
-            }`}
-          >
-            {status.enrolled
-              ? "Protected"
-              : "Not enrolled"}
+          <div className={`biotrust-state ${status.enrolled ? "active" : "inactive"}`}>
+            {status.enrolled ? "Protected" : "Not enrolled"}
           </div>
         </div>
 
@@ -428,50 +296,27 @@ export default function BioTrustCard() {
           <>
             <div className="biotrust-stats">
               <div>
-                <span>
-                  Face enrollment
-                </span>
+                <span>Face enrollment</span>
 
-                <strong>
-                  {status.enrolled
-                    ? "Active"
-                    : "Not configured"}
-                </strong>
+                <strong>{status.enrolled ? "Active" : "Not configured"}</strong>
               </div>
 
               <div>
-                <span>
-                  Enrolled
-                </span>
+                <span>Enrolled</span>
 
-                <strong>
-                  {formatDate(
-                    status.enrolledAt
-                  )}
-                </strong>
+                <strong>{formatDate(status.enrolledAt)}</strong>
               </div>
 
               <div>
-                <span>
-                  Last verified
-                </span>
+                <span>Last verified</span>
 
-                <strong>
-                  {formatDate(
-                    status.lastVerifiedAt
-                  )}
-                </strong>
+                <strong>{formatDate(status.lastVerifiedAt)}</strong>
               </div>
 
               <div>
-                <span>
-                  Successful checks
-                </span>
+                <span>Successful checks</span>
 
-                <strong>
-                  {status.verificationCount ||
-                    0}
-                </strong>
+                <strong>{status.verificationCount || 0}</strong>
               </div>
             </div>
 
@@ -480,17 +325,11 @@ export default function BioTrustCard() {
                 <ShieldAlert />
 
                 <div>
-                  <b>
-                    BioTrust temporarily locked
-                  </b>
+                  <b>BioTrust temporarily locked</b>
 
                   <span>
-                    Too many failed verification
-                    attempts. Try again after{" "}
-                    {formatDate(
-                      status.lockedUntil
-                    )}
-                    .
+                    Too many failed verification attempts. Try again after{" "}
+                    {formatDate(status.lockedUntil)}.
                   </span>
                 </div>
               </div>
@@ -502,9 +341,7 @@ export default function BioTrustCard() {
                   type="button"
                   className="flow-primary"
                   disabled={processing}
-                  onClick={() =>
-                    openCamera("enroll")
-                  }
+                  onClick={() => openCamera("enroll")}
                 >
                   <Camera size={18} />
                   Enroll my face
@@ -514,17 +351,10 @@ export default function BioTrustCard() {
                   <button
                     type="button"
                     className="flow-primary"
-                    disabled={
-                      processing ||
-                      status.locked
-                    }
-                    onClick={() =>
-                      openCamera("verify")
-                    }
+                    disabled={processing || status.locked}
+                    onClick={() => openCamera("verify")}
                   >
-                    <ShieldCheck
-                      size={18}
-                    />
+                    <ShieldCheck size={18} />
                     Verify identity
                   </button>
 
@@ -532,13 +362,9 @@ export default function BioTrustCard() {
                     type="button"
                     className="flow-ghost"
                     disabled={processing}
-                    onClick={() =>
-                      openCamera("enroll")
-                    }
+                    onClick={() => openCamera("enroll")}
                   >
-                    <RefreshCw
-                      size={17}
-                    />
+                    <RefreshCw size={17} />
                     Re-enroll face
                   </button>
 
@@ -546,9 +372,7 @@ export default function BioTrustCard() {
                     type="button"
                     className="biotrust-remove"
                     disabled={processing}
-                    onClick={
-                      removeEnrollment
-                    }
+                    onClick={removeEnrollment}
                   >
                     <Trash2 size={17} />
                     Remove BioTrust
@@ -561,10 +385,8 @@ export default function BioTrustCard() {
               <CheckCircle2 />
 
               <span>
-                Live captures are processed
-                transiently and are not stored by
-                AutoFlow. The enrolled reference
-                is encrypted before S3 storage.
+                Live captures are processed transiently and are not stored by AutoFlow. The enrolled
+                reference is encrypted before S3 storage.
               </span>
             </div>
           </>
@@ -575,10 +397,7 @@ export default function BioTrustCard() {
         <div
           className="biotrust-camera-overlay"
           onMouseDown={(event) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
+            if (event.target === event.currentTarget) {
               stopCamera();
             }
           }}
@@ -586,38 +405,20 @@ export default function BioTrustCard() {
           <div className="biotrust-camera-modal">
             <div className="biotrust-camera-head">
               <div>
-                <span>
-                  AUTOFLOW BIOTRUST
-                </span>
+                <span>AUTOFLOW BIOTRUST</span>
 
-                <h3>
-                  {mode === "enroll"
-                    ? "Enroll your face"
-                    : "Verify your identity"}
-                </h3>
+                <h3>{mode === "enroll" ? "Enroll your face" : "Verify your identity"}</h3>
 
-                <p>
-                  Look directly at the camera
-                  with your face clearly visible.
-                </p>
+                <p>Look directly at the camera with your face clearly visible.</p>
               </div>
 
-              <button
-                type="button"
-                onClick={stopCamera}
-                aria-label="Close camera"
-              >
+              <button type="button" onClick={stopCamera} aria-label="Close camera">
                 <X />
               </button>
             </div>
 
             <div className="biotrust-video-wrap">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-              />
+              <video ref={videoRef} autoPlay playsInline muted />
 
               <div className="biotrust-face-guide">
                 <span />
@@ -630,8 +431,7 @@ export default function BioTrustCard() {
             </div>
 
             <div className="biotrust-camera-tip">
-              Keep only one face visible and use
-              good lighting.
+              Keep only one face visible and use good lighting.
             </div>
 
             <div className="biotrust-camera-actions">

@@ -3,13 +3,9 @@ const fs = require("fs");
 const Document = require("../models/Document");
 const SecurityEvent = require("../models/SecurityEvent");
 
-const {
-  scanSensitiveData,
-} = require("../services/sensitiveDataScanner");
+const { scanSensitiveData } = require("../services/sensitiveDataScanner");
 
-const {
-  createNotification,
-} = require("../services/notificationService");
+const { createNotification } = require("../services/notificationService");
 
 const {
   verifyDocumentIntegrity,
@@ -27,20 +23,9 @@ const {
   getDocumentBuffer,
 } = require("../services/s3StorageService");
 
-const {
-  recordSecurityEvent,
-} = require("../services/securityEventService");
-
-/* =====================================================
-   Load document for integrity verification
-   Supports S3 + legacy local storage
-===================================================== */
+const { recordSecurityEvent } = require("../services/securityEventService");
 
 async function verifyStoredDocument(document) {
-  /* -----------------------------
-     AWS S3
-  ----------------------------- */
-
   if (document.storageProvider === "s3") {
     if (!document.s3Key) {
       return {
@@ -50,275 +35,272 @@ async function verifyStoredDocument(document) {
       };
     }
 
-    const exists = await documentExists(
-      document.s3Key
-    );
+    const exists = await documentExists(document.s3Key);
 
     if (!exists) {
       return {
         valid: false,
         status: "missing",
-        reason:
-          "Stored S3 file is unavailable",
+        reason: "Stored S3 file is unavailable",
       };
     }
 
-    const encryptedBuffer =
-      await getDocumentBuffer(
-        document.s3Key
-      );
+    const encryptedBuffer = await getDocumentBuffer(document.s3Key);
 
-    return verifyDocumentIntegrityBuffer(
-      document,
-      encryptedBuffer
-    );
+    return verifyDocumentIntegrityBuffer(document, encryptedBuffer);
   }
 
-  /* -----------------------------
-     Legacy Render/local file
-  ----------------------------- */
-
-  return verifyDocumentIntegrity(
-    document
-  );
+  return verifyDocumentIntegrity(document);
 }
 
-/* =====================================================
-   Security Dashboard
-===================================================== */
+exports.getSecurityDashboard = async (req, res) => {
+  try {
+    const documents = await Document.find({
+      uploadedBy: req.user._id,
 
-exports.getSecurityDashboard =
-  async (req, res) => {
-    try {
-      const documents =
-        await Document.find({
-          uploadedBy:
-            req.user._id,
-
-          deleted: false,
-        })
-          .select(
-            "filename fileType classification sensitiveData security storageProvider storageStatus createdAt"
-          )
-          .sort({
-            createdAt: -1,
-          });
-
-      const scannedDocuments =
-        documents.filter(
-          (document) =>
-            Boolean(
-              document
-                .sensitiveData
-                ?.scannedAt
-            )
-        );
-
-      const totalFindings =
-        scannedDocuments.reduce(
-          (sum, document) =>
-            sum +
-            (document
-              .sensitiveData
-              ?.totalFindings ||
-              0),
-          0
-        );
-
-      const riskyDocuments =
-        scannedDocuments.filter(
-          (document) =>
-            document
-              .sensitiveData
-              ?.riskLevel &&
-            document
-              .sensitiveData
-              ?.riskLevel !==
-              "safe"
-        ).length;
-
-      const criticalDocuments =
-        scannedDocuments.filter(
-          (document) =>
-            document
-              .sensitiveData
-              ?.riskLevel ===
-            "critical"
-        ).length;
-
-      const encryptedDocuments =
-        documents.filter(
-          (document) =>
-            document.security
-              ?.encryption ===
-            "AES-256-GCM"
-        ).length;
-
-      const verifiedDocuments =
-        documents.filter(
-          (document) =>
-            document.security
-              ?.integrityStatus ===
-            "verified"
-        ).length;
-
-      const restrictedDocuments =
-        documents.filter(
-          (document) =>
-            document.security
-              ?.trustGrade ===
-            "restricted"
-        ).length;
-
-      const s3Documents =
-        documents.filter(
-          (document) =>
-            document.storageProvider ===
-            "s3"
-        ).length;
-
-      const missingDocuments =
-        documents.filter(
-          (document) =>
-            document.storageStatus ===
-              "missing" ||
-            document.security
-              ?.integrityStatus ===
-              "missing"
-        ).length;
-
-      const recentEvents =
-        await SecurityEvent.find({
-          user: req.user._id,
-        })
-          .sort({
-            createdAt: -1,
-          })
-          .limit(20)
-          .lean();
-
-      return res.json({
-        success: true,
-
-        metrics: {
-          scanned:
-            scannedDocuments.length,
-
-          riskyDocuments,
-
-          criticalDocuments,
-
-          totalFindings,
-
-          encryptedDocuments,
-
-          verifiedDocuments,
-
-          restrictedDocuments,
-
-          s3Documents,
-
-          missingDocuments,
-        },
-
-        documents,
-
-        recentEvents,
+      deleted: false,
+    })
+      .select(
+        "filename fileType classification sensitiveData security storageProvider storageStatus createdAt",
+      )
+      .sort({
+        createdAt: -1,
       });
-    } catch (error) {
-      return res.status(500).json({
+
+    const scannedDocuments = documents.filter((document) =>
+      Boolean(document.sensitiveData?.scannedAt),
+    );
+
+    const totalFindings = scannedDocuments.reduce(
+      (sum, document) => sum + (document.sensitiveData?.totalFindings || 0),
+      0,
+    );
+
+    const riskyDocuments = scannedDocuments.filter(
+      (document) =>
+        document.sensitiveData?.riskLevel && document.sensitiveData?.riskLevel !== "safe",
+    ).length;
+
+    const criticalDocuments = scannedDocuments.filter(
+      (document) => document.sensitiveData?.riskLevel === "critical",
+    ).length;
+
+    const encryptedDocuments = documents.filter(
+      (document) => document.security?.encryption === "AES-256-GCM",
+    ).length;
+
+    const verifiedDocuments = documents.filter(
+      (document) => document.security?.integrityStatus === "verified",
+    ).length;
+
+    const restrictedDocuments = documents.filter(
+      (document) => document.security?.trustGrade === "restricted",
+    ).length;
+
+    const s3Documents = documents.filter((document) => document.storageProvider === "s3").length;
+
+    const missingDocuments = documents.filter(
+      (document) =>
+        document.storageStatus === "missing" || document.security?.integrityStatus === "missing",
+    ).length;
+
+    const recentEvents = await SecurityEvent.find({
+      user: req.user._id,
+    })
+      .sort({
+        createdAt: -1,
+      })
+      .limit(20)
+      .lean();
+
+    return res.json({
+      success: true,
+
+      metrics: {
+        scanned: scannedDocuments.length,
+
+        riskyDocuments,
+
+        criticalDocuments,
+
+        totalFindings,
+
+        encryptedDocuments,
+
+        verifiedDocuments,
+
+        restrictedDocuments,
+
+        s3Documents,
+
+        missingDocuments,
+      },
+
+      documents,
+
+      recentEvents,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.verifyIntegrity = async (req, res) => {
+  try {
+    const document = await Document.findOne({
+      _id: req.params.id,
+
+      uploadedBy: req.user._id,
+
+      deleted: false,
+    });
+
+    if (!document) {
+      return res.status(404).json({
         success: false,
-        message: error.message,
+
+        message: "Document not found",
       });
     }
-  };
 
-/* =====================================================
-   Verify Document Integrity
-===================================================== */
+    const verification = await verifyStoredDocument(document);
 
-exports.verifyIntegrity =
-  async (req, res) => {
-    try {
-      const document =
-        await Document.findOne({
-          _id: req.params.id,
+    const trust = calculateTrustScore({
+      integrityStatus: verification.status,
 
-          uploadedBy:
-            req.user._id,
+      encrypted: document.security?.encryption === "AES-256-GCM",
 
-          deleted: false,
-        });
+      ownerBound: true,
 
-      if (!document) {
-        return res
-          .status(404)
-          .json({
-            success: false,
+      injectionDetected: document.security?.promptInjection?.detected,
 
-            message:
-              "Document not found",
-          });
-      }
+      sensitiveRisk: document.sensitiveData?.riskLevel,
+    });
 
-      const verification =
-        await verifyStoredDocument(
-          document
-        );
+    if (verification.status === "missing") {
+      document.storageStatus = "missing";
+    } else if (verification.valid) {
+      document.storageStatus = "available";
+    }
 
-      const trust =
-        calculateTrustScore({
-          integrityStatus:
-            verification.status,
+    document.security = {
+      ...document.security,
 
-          encrypted:
-            document.security
-              ?.encryption ===
-            "AES-256-GCM",
+      integrityStatus: verification.status,
 
-          ownerBound: true,
+      lastVerifiedAt: new Date(),
 
-          injectionDetected:
-            document.security
-              ?.promptInjection
-              ?.detected,
+      trustScore: trust.score,
 
-          sensitiveRisk:
-            document
-              .sensitiveData
-              ?.riskLevel,
-        });
+      trustGrade: trust.grade,
 
-      if (
-        verification.status ===
-        "missing"
-      ) {
-        document.storageStatus =
-          "missing";
-      } else if (
-        verification.valid
-      ) {
-        document.storageStatus =
-          "available";
-      }
+      trustDimensions: trust.dimensions,
+    };
+
+    await document.save();
+
+    await recordSecurityEvent({
+      req,
+
+      user: req.user._id,
+
+      document: document._id,
+
+      type: "integrity",
+
+      outcome: verification.valid ? "allowed" : "blocked",
+
+      severity: verification.valid
+        ? "info"
+        : verification.status === "missing"
+          ? "high"
+          : "critical",
+
+      message: verification.reason,
+
+      metadata: {
+        trustScore: trust.score,
+
+        storageProvider: document.storageProvider || "local",
+      },
+    });
+
+    if (verification.status === "missing") {
+      return res.status(404).json({
+        success: false,
+
+        code: "FILE_UNAVAILABLE",
+
+        message: "Document file is unavailable. Please re-upload the original file.",
+
+        verification,
+
+        trust,
+
+        security: document.security,
+      });
+    }
+
+    return res.status(verification.valid ? 200 : 409).json({
+      success: verification.valid,
+
+      verification,
+
+      trust,
+
+      security: document.security,
+    });
+  } catch (error) {
+    console.error("Integrity verification error:", error);
+
+    return res.status(500).json({
+      success: false,
+
+      message: error.message,
+    });
+  }
+};
+
+exports.protectLegacyDocument = async (req, res) => {
+  let uploadedS3Key = "";
+
+  try {
+    const document = await Document.findOne({
+      _id: req.params.id,
+
+      uploadedBy: req.user._id,
+
+      deleted: false,
+    });
+
+    if (!document) {
+      return res.status(404).json({
+        success: false,
+
+        message: "Document not found",
+      });
+    }
+
+    if (document.storageProvider === "s3") {
+      return exports.verifyIntegrity(req, res);
+    }
+
+    if (!document.filepath || !fs.existsSync(document.filepath)) {
+      document.storageStatus = "missing";
 
       document.security = {
         ...document.security,
 
-        integrityStatus:
-          verification.status,
+        integrityStatus: "missing",
 
-        lastVerifiedAt:
-          new Date(),
+        lastVerifiedAt: new Date(),
 
-        trustScore:
-          trust.score,
+        trustScore: 0,
 
-        trustGrade:
-          trust.grade,
-
-        trustDimensions:
-          trust.dimensions,
+        trustGrade: "restricted",
       };
 
       await document.save();
@@ -326,582 +308,246 @@ exports.verifyIntegrity =
       await recordSecurityEvent({
         req,
 
-        user:
-          req.user._id,
+        user: req.user._id,
 
-        document:
-          document._id,
+        document: document._id,
 
-        type:
-          "integrity",
+        type: "security-migration",
 
-        outcome:
-          verification.valid
-            ? "allowed"
-            : "blocked",
+        outcome: "blocked",
 
-        severity:
-          verification.valid
-            ? "info"
-            : verification.status ===
-              "missing"
-            ? "high"
-            : "critical",
+        severity: "high",
 
-        message:
-          verification.reason,
-
-        metadata: {
-          trustScore:
-            trust.score,
-
-          storageProvider:
-            document.storageProvider ||
-            "local",
-        },
+        message: "Legacy file unavailable. S3 migration requires original document re-upload.",
       });
 
-      if (
-        verification.status ===
-        "missing"
-      ) {
-        return res
-          .status(404)
-          .json({
-            success: false,
-
-            code:
-              "FILE_UNAVAILABLE",
-
-            message:
-              "Document file is unavailable. Please re-upload the original file.",
-
-            verification,
-
-            trust,
-
-            security:
-              document.security,
-          });
-      }
-
-      return res
-        .status(
-          verification.valid
-            ? 200
-            : 409
-        )
-        .json({
-          success:
-            verification.valid,
-
-          verification,
-
-          trust,
-
-          security:
-            document.security,
-        });
-    } catch (error) {
-      console.error(
-        "Integrity verification error:",
-        error
-      );
-
-      return res.status(500).json({
+      return res.status(404).json({
         success: false,
 
-        message:
-          error.message,
+        code: "FILE_UNAVAILABLE",
+
+        message: "Legacy document file is unavailable. Please re-upload the original file.",
       });
     }
-  };
 
-/* =====================================================
-   Protect / Migrate Legacy Document
+    let encryptedBuffer;
+    let plaintextHash;
+    let encryptedHash;
+    let iv;
 
-   Legacy Render file -> AES-256-GCM -> AWS S3
-===================================================== */
+    if (document.security?.encryption === "AES-256-GCM") {
+      const verification = verifyDocumentIntegrity(document);
 
-exports.protectLegacyDocument =
-  async (req, res) => {
-    let uploadedS3Key = "";
+      if (!verification.valid) {
+        return res.status(409).json({
+          success: false,
+
+          message: "Legacy document integrity verification failed. Migration blocked.",
+        });
+      }
+
+      encryptedBuffer = fs.readFileSync(document.filepath);
+
+      plaintextHash = document.security?.plaintextHash;
+
+      encryptedHash = document.security?.encryptedHash;
+
+      iv = document.security?.iv;
+    } else {
+      const plaintextBuffer = fs.readFileSync(document.filepath);
+
+      const encrypted = encryptBuffer(plaintextBuffer);
+
+      encryptedBuffer = encrypted.encryptedBuffer;
+
+      plaintextHash = encrypted.plaintextHash;
+
+      encryptedHash = encrypted.encryptedHash;
+
+      iv = encrypted.iv;
+    }
+
+    const s3Key = createDocumentKey({
+      userId: req.user._id.toString(),
+
+      filename: document.filename,
+    });
+
+    await uploadDocument({
+      key: s3Key,
+
+      buffer: encryptedBuffer,
+    });
+
+    uploadedS3Key = s3Key;
+
+    const promptInjection = detectPromptInjection(document.content || "");
+
+    const trust = calculateTrustScore({
+      integrityStatus: "verified",
+
+      encrypted: true,
+
+      ownerBound: true,
+
+      injectionDetected: promptInjection.detected,
+
+      sensitiveRisk: document.sensitiveData?.riskLevel,
+    });
+
+    const oldFilepath = document.filepath;
+
+    document.filepath = "";
+
+    document.storageProvider = "s3";
+
+    document.s3Key = s3Key;
+
+    document.storageStatus = "available";
+
+    document.security = {
+      encryption: "AES-256-GCM",
+
+      encryptedAt: document.security?.encryptedAt || new Date(),
+
+      plaintextHash,
+
+      encryptedHash,
+
+      iv,
+
+      integrityStatus: "verified",
+
+      lastVerifiedAt: new Date(),
+
+      promptInjection,
+
+      trustScore: trust.score,
+
+      trustGrade: trust.grade,
+
+      trustDimensions: trust.dimensions,
+    };
+
+    await document.save();
 
     try {
-      const document =
-        await Document.findOne({
-          _id: req.params.id,
-
-          uploadedBy:
-            req.user._id,
-
-          deleted: false,
-        });
-
-      if (!document) {
-        return res
-          .status(404)
-          .json({
-            success: false,
-
-            message:
-              "Document not found",
-          });
+      if (oldFilepath && fs.existsSync(oldFilepath)) {
+        fs.unlinkSync(oldFilepath);
       }
+    } catch (cleanupError) {
+      console.error("Legacy local cleanup warning:", cleanupError.message);
+    }
 
-      /* -----------------------------
-         Already stored in S3
-      ----------------------------- */
+    uploadedS3Key = "";
 
-      if (
-        document.storageProvider ===
-        "s3"
-      ) {
-        return exports.verifyIntegrity(
-          req,
-          res
-        );
-      }
+    await recordSecurityEvent({
+      req,
 
-      /* -----------------------------
-         Legacy local file missing
-      ----------------------------- */
+      user: req.user._id,
 
-      if (
-        !document.filepath ||
-        !fs.existsSync(
-          document.filepath
-        )
-      ) {
-        document.storageStatus =
-          "missing";
+      document: document._id,
 
-        document.security = {
-          ...document.security,
+      type: "security-migration",
 
-          integrityStatus:
-            "missing",
+      outcome: promptInjection.detected ? "warning" : "allowed",
 
-          lastVerifiedAt:
-            new Date(),
+      severity: promptInjection.detected ? "high" : "info",
 
-          trustScore: 0,
+      message: "Legacy document migrated to encrypted private AWS S3 storage",
 
-          trustGrade:
-            "restricted",
-        };
+      metadata: {
+        trustScore: trust.score,
 
-        await document.save();
+        storageProvider: "s3",
+      },
+    });
 
-        await recordSecurityEvent({
-          req,
+    return res.json({
+      success: true,
 
-          user:
-            req.user._id,
+      message: "Document encrypted, migrated to AWS S3 and verified",
 
-          document:
-            document._id,
+      security: document.security,
 
-          type:
-            "security-migration",
+      storage: {
+        provider: "s3",
+        status: "available",
+      },
 
-          outcome:
-            "blocked",
-
-          severity:
-            "high",
-
-          message:
-            "Legacy file unavailable. S3 migration requires original document re-upload.",
-        });
-
-        return res
-          .status(404)
-          .json({
-            success: false,
-
-            code:
-              "FILE_UNAVAILABLE",
-
-            message:
-              "Legacy document file is unavailable. Please re-upload the original file.",
-          });
-      }
-
-      /* =================================
-         READ LEGACY FILE
-      ================================= */
-
-      let encryptedBuffer;
-      let plaintextHash;
-      let encryptedHash;
-      let iv;
-
-      /* -----------------------------
-         Already AES encrypted locally
-      ----------------------------- */
-
-      if (
-        document.security
-          ?.encryption ===
-        "AES-256-GCM"
-      ) {
-        const verification =
-          verifyDocumentIntegrity(
-            document
-          );
-
-        if (!verification.valid) {
-          return res
-            .status(409)
-            .json({
-              success: false,
-
-              message:
-                "Legacy document integrity verification failed. Migration blocked.",
-            });
-        }
-
-        encryptedBuffer =
-          fs.readFileSync(
-            document.filepath
-          );
-
-        plaintextHash =
-          document.security
-            ?.plaintextHash;
-
-        encryptedHash =
-          document.security
-            ?.encryptedHash;
-
-        iv =
-          document.security
-            ?.iv;
-      } else {
-        /* -----------------------------
-           Plain legacy file
-        ----------------------------- */
-
-        const plaintextBuffer =
-          fs.readFileSync(
-            document.filepath
-          );
-
-        const encrypted =
-          encryptBuffer(
-            plaintextBuffer
-          );
-
-        encryptedBuffer =
-          encrypted.encryptedBuffer;
-
-        plaintextHash =
-          encrypted.plaintextHash;
-
-        encryptedHash =
-          encrypted.encryptedHash;
-
-        iv =
-          encrypted.iv;
-      }
-
-      /* =================================
-         PRIVATE S3 KEY
-      ================================= */
-
-      const s3Key =
-        createDocumentKey({
-          userId:
-            req.user._id.toString(),
-
-          filename:
-            document.filename,
-        });
-
-      /* =================================
-         UPLOAD TO AWS S3
-      ================================= */
-
-      await uploadDocument({
-        key: s3Key,
-
-        buffer:
-          encryptedBuffer,
-      });
-
-      uploadedS3Key =
-        s3Key;
-
-      /* =================================
-         SECURITY ANALYSIS
-      ================================= */
-
-      const promptInjection =
-        detectPromptInjection(
-          document.content || ""
-        );
-
-      const trust =
-        calculateTrustScore({
-          integrityStatus:
-            "verified",
-
-          encrypted: true,
-
-          ownerBound: true,
-
-          injectionDetected:
-            promptInjection.detected,
-
-          sensitiveRisk:
-            document
-              .sensitiveData
-              ?.riskLevel,
-        });
-
-      /* =================================
-         UPDATE DATABASE TO S3
-      ================================= */
-
-      const oldFilepath =
-        document.filepath;
-
-      document.filepath = "";
-
-      document.storageProvider =
-        "s3";
-
-      document.s3Key =
-        s3Key;
-
-      document.storageStatus =
-        "available";
-
-      document.security = {
-        encryption:
-          "AES-256-GCM",
-
-        encryptedAt:
-          document.security
-            ?.encryptedAt ||
-          new Date(),
-
-        plaintextHash,
-
-        encryptedHash,
-
-        iv,
-
-        integrityStatus:
-          "verified",
-
-        lastVerifiedAt:
-          new Date(),
-
-        promptInjection,
-
-        trustScore:
-          trust.score,
-
-        trustGrade:
-          trust.grade,
-
-        trustDimensions:
-          trust.dimensions,
-      };
-
-      await document.save();
-
-      /*
-        Database now safely points to S3.
-        Remove old Render file.
-      */
-
+      trust,
+    });
+  } catch (error) {
+    if (uploadedS3Key) {
       try {
-        if (
-          oldFilepath &&
-          fs.existsSync(
-            oldFilepath
-          )
-        ) {
-          fs.unlinkSync(
-            oldFilepath
-          );
-        }
+        await deleteDocument(uploadedS3Key);
       } catch (cleanupError) {
-        console.error(
-          "Legacy local cleanup warning:",
-          cleanupError.message
-        );
+        console.error("S3 migration rollback failed:", cleanupError.message);
       }
+    }
 
-      uploadedS3Key = "";
+    console.error("Security migration error:", error);
 
-      await recordSecurityEvent({
-        req,
+    return res.status(500).json({
+      success: false,
 
-        user:
-          req.user._id,
+      message: error.message,
+    });
+  }
+};
 
-        document:
-          document._id,
+exports.scanDocument = async (req, res) => {
+  try {
+    const document = await Document.findOne({
+      _id: req.params.id,
 
-        type:
-          "security-migration",
+      uploadedBy: req.user._id,
 
-        outcome:
-          promptInjection.detected
-            ? "warning"
-            : "allowed",
+      deleted: false,
+    });
 
-        severity:
-          promptInjection.detected
-            ? "high"
-            : "info",
-
-        message:
-          "Legacy document migrated to encrypted private AWS S3 storage",
-
-        metadata: {
-          trustScore:
-            trust.score,
-
-          storageProvider:
-            "s3",
-        },
-      });
-
-      return res.json({
-        success: true,
-
-        message:
-          "Document encrypted, migrated to AWS S3 and verified",
-
-        security:
-          document.security,
-
-        storage: {
-          provider: "s3",
-          status:
-            "available",
-        },
-
-        trust,
-      });
-    } catch (error) {
-      /*
-        If S3 upload succeeded but DB
-        migration failed, remove orphan.
-      */
-
-      if (uploadedS3Key) {
-        try {
-          await deleteDocument(
-            uploadedS3Key
-          );
-        } catch (
-          cleanupError
-        ) {
-          console.error(
-            "S3 migration rollback failed:",
-            cleanupError.message
-          );
-        }
-      }
-
-      console.error(
-        "Security migration error:",
-        error
-      );
-
-      return res.status(500).json({
+    if (!document) {
+      return res.status(404).json({
         success: false,
 
-        message:
-          error.message,
+        message: "Document not found",
       });
     }
-  };
 
-/* =====================================================
-   Sensitive Data Scan
-===================================================== */
+    document.sensitiveData = scanSensitiveData(document.content || "");
 
-exports.scanDocument =
-  async (req, res) => {
-    try {
-      const document =
-        await Document.findOne({
-          _id: req.params.id,
+    await document.save();
 
-          uploadedBy:
-            req.user._id,
+    await createNotification({
+      user: req.user._id,
 
-          deleted: false,
-        });
+      type: "security",
 
-      if (!document) {
-        return res
-          .status(404)
-          .json({
-            success: false,
+      title: document.sensitiveData.totalFindings
+        ? `${document.sensitiveData.riskLevel} privacy risk detected`
+        : "Privacy scan completed",
 
-            message:
-              "Document not found",
-          });
-      }
+      message: document.sensitiveData.totalFindings
+        ? `${document.sensitiveData.totalFindings} sensitive finding(s) were detected in ${document.filename}.`
+        : `${document.filename} passed the sensitive data scan.`,
 
-      document.sensitiveData =
-        scanSensitiveData(
-          document.content || ""
-        );
+      document: document._id,
 
-      await document.save();
+      actionPath: "/security",
+    });
 
-      await createNotification({
-        user:
-          req.user._id,
+    return res.json({
+      success: true,
 
-        type:
-          "security",
+      message: "Privacy scan completed",
 
-        title:
-          document
-            .sensitiveData
-            .totalFindings
-            ? `${document.sensitiveData.riskLevel} privacy risk detected`
-            : "Privacy scan completed",
+      sensitiveData: document.sensitiveData,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
 
-        message:
-          document
-            .sensitiveData
-            .totalFindings
-            ? `${document.sensitiveData.totalFindings} sensitive finding(s) were detected in ${document.filename}.`
-            : `${document.filename} passed the sensitive data scan.`,
-
-        document:
-          document._id,
-
-        actionPath:
-          "/security",
-      });
-
-      return res.json({
-        success: true,
-
-        message:
-          "Privacy scan completed",
-
-        sensitiveData:
-          document.sensitiveData,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-
-        message:
-          error.message,
-      });
-    }
-  };
+      message: error.message,
+    });
+  }
+};

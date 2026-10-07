@@ -12,10 +12,6 @@ const { protect } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-/* =====================================================
-   Secure In-Memory Face Upload
-===================================================== */
-
 const storage = multer.memoryStorage();
 
 const upload = multer({
@@ -26,93 +22,43 @@ const upload = multer({
   },
 
   fileFilter: (req, file, callback) => {
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-    ];
+    const allowedTypes = ["image/jpeg", "image/png"];
 
     if (!allowedTypes.includes(file.mimetype)) {
-      return callback(
-        new Error(
-          "Only JPEG and PNG face images are allowed."
-        )
-      );
+      return callback(new Error("Only JPEG and PNG face images are allowed."));
     }
 
     callback(null, true);
   },
 });
 
-/* =====================================================
-   BioTrust Status
-===================================================== */
+router.get("/status", protect, getFaceStatus);
 
-router.get(
-  "/status",
-  protect,
-  getFaceStatus
-);
+router.post("/enroll", protect, upload.single("face"), enrollFace);
 
-/* =====================================================
-   Face Enrollment
-===================================================== */
+router.post("/verify", protect, upload.single("face"), verifyFace);
 
-router.post(
-  "/enroll",
-  protect,
-  upload.single("face"),
-  enrollFace
-);
-
-/* =====================================================
-   Live Face Verification
-===================================================== */
-
-router.post(
-  "/verify",
-  protect,
-  upload.single("face"),
-  verifyFace
-);
-
-/* =====================================================
-   Remove Face Enrollment
-===================================================== */
-
-router.delete(
-  "/enroll",
-  protect,
-  removeFace
-);
-
-/* =====================================================
-   Upload Error Handler
-===================================================== */
+router.delete("/enroll", protect, removeFace);
 
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({
         success: false,
-        message:
-          "Face image must be smaller than 5 MB.",
+        message: "Face image must be smaller than 5 MB.",
       });
     }
 
     return res.status(400).json({
       success: false,
-      message:
-        error.message ||
-        "Biometric upload failed.",
+      message: error.message || "Biometric upload failed.",
     });
   }
 
   if (error) {
     return res.status(400).json({
       success: false,
-      message:
-        error.message ||
-        "Invalid biometric image.",
+      message: error.message || "Invalid biometric image.",
     });
   }
 

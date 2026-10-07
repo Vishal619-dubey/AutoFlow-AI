@@ -35,7 +35,7 @@ async function uploadDocument({ key, buffer }) {
       Key: key,
       Body: buffer,
       ContentType: "application/octet-stream",
-    })
+    }),
   );
 
   return key;
@@ -46,7 +46,7 @@ async function getDocumentBuffer(key) {
     new GetObjectCommand({
       Bucket: getBucketName(),
       Key: key,
-    })
+    }),
   );
 
   if (!response.Body) {
@@ -62,7 +62,7 @@ async function deleteDocument(key) {
     new DeleteObjectCommand({
       Bucket: getBucketName(),
       Key: key,
-    })
+    }),
   );
 }
 
@@ -72,7 +72,7 @@ async function documentExists(key) {
       new HeadObjectCommand({
         Bucket: getBucketName(),
         Key: key,
-      })
+      }),
     );
 
     return true;

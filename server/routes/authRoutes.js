@@ -19,4 +19,3 @@ router.put("/profile", protect, updateProfile);
 router.post("/logout", protect, logoutUser);
 
 module.exports = router;
-

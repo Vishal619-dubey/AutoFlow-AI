@@ -50,7 +50,8 @@ function scanSensitiveData(text = "") {
   }
 
   riskScore = Math.min(100, riskScore);
-  const riskLevel = riskScore >= 60 ? "critical" : riskScore >= 30 ? "high" : riskScore > 0 ? "medium" : "safe";
+  const riskLevel =
+    riskScore >= 60 ? "critical" : riskScore >= 30 ? "high" : riskScore > 0 ? "medium" : "safe";
 
   return {
     scannedAt: new Date(),

@@ -1,6 +1,11 @@
 const express = require("express");
 const { protect } = require("../middleware/authMiddleware");
-const { getSecurityDashboard, scanDocument, verifyIntegrity, protectLegacyDocument } = require("../controllers/securityController");
+const {
+  getSecurityDashboard,
+  scanDocument,
+  verifyIntegrity,
+  protectLegacyDocument,
+} = require("../controllers/securityController");
 
 const router = express.Router();
 router.use(protect);

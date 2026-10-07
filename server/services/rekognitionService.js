@@ -10,10 +10,6 @@ const rekognitionClient = new RekognitionClient({
 
 const DEFAULT_SIMILARITY_THRESHOLD = 90;
 
-/* =====================================================
-   Validate Face Image
-===================================================== */
-
 async function validateFaceImage(imageBuffer) {
   if (!Buffer.isBuffer(imageBuffer) || !imageBuffer.length) {
     throw new Error("Face image is empty");
@@ -24,12 +20,8 @@ async function validateFaceImage(imageBuffer) {
       Image: {
         Bytes: imageBuffer,
       },
-      Attributes: [
-        "DEFAULT",
-        "FACE_OCCLUDED",
-        "EYES_OPEN",
-      ],
-    })
+      Attributes: ["DEFAULT", "FACE_OCCLUDED", "EYES_OPEN"],
+    }),
   );
 
   const faces = response.FaceDetails || [];
@@ -57,8 +49,7 @@ async function validateFaceImage(imageBuffer) {
   const brightness = Number(face.Quality?.Brightness || 0);
 
   const occluded =
-    face.FaceOccluded?.Value === true &&
-    Number(face.FaceOccluded?.Confidence || 0) >= 80;
+    face.FaceOccluded?.Value === true && Number(face.FaceOccluded?.Confidence || 0) >= 80;
 
   if (confidence < 95) {
     return {
@@ -94,31 +85,20 @@ async function validateFaceImage(imageBuffer) {
   };
 }
 
-/* =====================================================
-   Compare Enrolled Face vs Live Face
-===================================================== */
-
 async function compareFaces({
   enrolledImageBuffer,
   liveImageBuffer,
   similarityThreshold = DEFAULT_SIMILARITY_THRESHOLD,
 }) {
-  if (
-    !Buffer.isBuffer(enrolledImageBuffer) ||
-    !enrolledImageBuffer.length
-  ) {
+  if (!Buffer.isBuffer(enrolledImageBuffer) || !enrolledImageBuffer.length) {
     throw new Error("Enrolled face image is unavailable");
   }
 
-  if (
-    !Buffer.isBuffer(liveImageBuffer) ||
-    !liveImageBuffer.length
-  ) {
+  if (!Buffer.isBuffer(liveImageBuffer) || !liveImageBuffer.length) {
     throw new Error("Live face image is unavailable");
   }
 
-  const liveValidation =
-    await validateFaceImage(liveImageBuffer);
+  const liveValidation = await validateFaceImage(liveImageBuffer);
 
   if (!liveValidation.valid) {
     return {
@@ -143,7 +123,7 @@ async function compareFaces({
       SimilarityThreshold: similarityThreshold,
 
       QualityFilter: "AUTO",
-    })
+    }),
   );
 
   const matches = response.FaceMatches || [];
@@ -158,34 +138,20 @@ async function compareFaces({
     };
   }
 
-  const bestMatch = matches.reduce(
-    (best, current) => {
-      const bestScore = Number(
-        best?.Similarity || 0
-      );
+  const bestMatch = matches.reduce((best, current) => {
+    const bestScore = Number(best?.Similarity || 0);
 
-      const currentScore = Number(
-        current?.Similarity || 0
-      );
+    const currentScore = Number(current?.Similarity || 0);
 
-      return currentScore > bestScore
-        ? current
-        : best;
-    },
-    matches[0]
-  );
+    return currentScore > bestScore ? current : best;
+  }, matches[0]);
 
-  const similarity = Number(
-    bestMatch?.Similarity || 0
-  );
+  const similarity = Number(bestMatch?.Similarity || 0);
 
   return {
-    verified:
-      similarity >= similarityThreshold,
+    verified: similarity >= similarityThreshold,
 
-    similarity: Number(
-      similarity.toFixed(2)
-    ),
+    similarity: Number(similarity.toFixed(2)),
 
     threshold: similarityThreshold,
 
@@ -196,9 +162,7 @@ async function compareFaces({
 
     liveValidation,
 
-    faceConfidence: Number(
-      bestMatch?.Face?.Confidence || 0
-    ),
+    faceConfidence: Number(bestMatch?.Face?.Confidence || 0),
   };
 }
 

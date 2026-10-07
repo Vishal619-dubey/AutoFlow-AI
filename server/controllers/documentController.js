@@ -15,27 +15,18 @@ const deleteDocument = async (req, res) => {
       });
     }
 
-    // Delete file from uploads folder
     if (fs.existsSync(document.filepath)) {
       fs.unlinkSync(document.filepath);
     }
 
-    // Delete document from MongoDB
     await Document.findByIdAndDelete(id);
 
-    // Save Activity
-    await addActivity(
-      "Deleted Document",
-      document.filename,
-      "trash",
-      "red"
-    );
+    await addActivity("Deleted Document", document.filename, "trash", "red");
 
     return res.json({
       success: true,
       message: "Document deleted successfully",
     });
-
   } catch (error) {
     console.log(error);
 

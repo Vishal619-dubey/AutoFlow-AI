@@ -30,13 +30,11 @@ const generatePdfSummary = async (req, res) => {
 
     let text = document.content?.trim() || "";
 
-    // Fallback: extract again only when database content is empty
     if (!text) {
       if (!document.filepath || !fs.existsSync(document.filepath)) {
         return res.status(400).json({
           success: false,
-          message:
-            "The PDF file is no longer available on the server. Please upload it again.",
+          message: "The PDF file is no longer available on the server. Please upload it again.",
         });
       }
 
@@ -50,16 +48,13 @@ const generatePdfSummary = async (req, res) => {
       }
     }
 
-    // Scanned or image-based PDF
     if (text.length < 50) {
       return res.status(400).json({
         success: false,
-        message:
-          "No readable text was found. This PDF may be scanned or image-based.",
+        message: "No readable text was found. This PDF may be scanned or image-based.",
       });
     }
 
-    // Prevent very large AI requests
     const summaryInput = text.slice(0, 12000);
 
     const summary = await generateSummary(summaryInput);

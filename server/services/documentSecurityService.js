@@ -11,9 +11,7 @@ const masterKey = () => {
   }
 
   if (process.env.NODE_ENV === "production") {
-    throw new Error(
-      "DOCUMENT_MASTER_KEY must be a 64-character hex value in production"
-    );
+    throw new Error("DOCUMENT_MASTER_KEY must be a 64-character hex value in production");
   }
 
   return crypto
@@ -22,42 +20,23 @@ const masterKey = () => {
     .digest();
 };
 
-const sha256 = (value) =>
-  crypto.createHash("sha256").update(value).digest("hex");
+const sha256 = (value) => crypto.createHash("sha256").update(value).digest("hex");
 
 const hashFile = (filePath) => sha256(fs.readFileSync(filePath));
 
-/* =====================================================
-   Buffer Encryption
-===================================================== */
-
 const encryptBuffer = (input) => {
-  const plaintext = Buffer.isBuffer(input)
-    ? input
-    : Buffer.from(input);
+  const plaintext = Buffer.isBuffer(input) ? input : Buffer.from(input);
 
   const plaintextHash = sha256(plaintext);
   const iv = crypto.randomBytes(12);
 
-  const cipher = crypto.createCipheriv(
-    "aes-256-gcm",
-    masterKey(),
-    iv
-  );
+  const cipher = crypto.createCipheriv("aes-256-gcm", masterKey(), iv);
 
-  const ciphertext = Buffer.concat([
-    cipher.update(plaintext),
-    cipher.final(),
-  ]);
+  const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
 
   const tag = cipher.getAuthTag();
 
-  const encryptedBuffer = Buffer.concat([
-    MAGIC,
-    iv,
-    tag,
-    ciphertext,
-  ]);
+  const encryptedBuffer = Buffer.concat([MAGIC, iv, tag, ciphertext]);
 
   return {
     encryptedBuffer,
@@ -67,50 +46,25 @@ const encryptBuffer = (input) => {
   };
 };
 
-/* =====================================================
-   Buffer Decryption
-===================================================== */
-
 const decryptBuffer = (input) => {
-  const payload = Buffer.isBuffer(input)
-    ? input
-    : Buffer.from(input);
+  const payload = Buffer.isBuffer(input) ? input : Buffer.from(input);
 
   if (!payload.subarray(0, MAGIC.length).equals(MAGIC)) {
     return payload;
   }
 
-  const iv = payload.subarray(
-    MAGIC.length,
-    MAGIC.length + 12
-  );
+  const iv = payload.subarray(MAGIC.length, MAGIC.length + 12);
 
-  const tag = payload.subarray(
-    MAGIC.length + 12,
-    MAGIC.length + 28
-  );
+  const tag = payload.subarray(MAGIC.length + 12, MAGIC.length + 28);
 
-  const ciphertext = payload.subarray(
-    MAGIC.length + 28
-  );
+  const ciphertext = payload.subarray(MAGIC.length + 28);
 
-  const decipher = crypto.createDecipheriv(
-    "aes-256-gcm",
-    masterKey(),
-    iv
-  );
+  const decipher = crypto.createDecipheriv("aes-256-gcm", masterKey(), iv);
 
   decipher.setAuthTag(tag);
 
-  return Buffer.concat([
-    decipher.update(ciphertext),
-    decipher.final(),
-  ]);
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 };
-
-/* =====================================================
-   Existing File Encryption
-===================================================== */
 
 const encryptFile = (filePath) => {
   const plaintext = fs.readFileSync(filePath);
@@ -119,11 +73,7 @@ const encryptFile = (filePath) => {
 
   const encryptedPath = `${filePath}.afenc`;
 
-  fs.writeFileSync(
-    encryptedPath,
-    encrypted.encryptedBuffer,
-    { mode: 0o600 }
-  );
+  fs.writeFileSync(encryptedPath, encrypted.encryptedBuffer, { mode: 0o600 });
 
   fs.unlinkSync(filePath);
 
@@ -135,28 +85,13 @@ const encryptFile = (filePath) => {
   };
 };
 
-/* =====================================================
-   Existing File Decryption
-===================================================== */
-
 const decryptFile = (filePath) => {
   const payload = fs.readFileSync(filePath);
   return decryptBuffer(payload);
 };
 
-/* =====================================================
-   S3 / Buffer Integrity Verification
-===================================================== */
-
-const verifyDocumentIntegrityBuffer = (
-  document,
-  encryptedBuffer
-) => {
-  if (
-    !encryptedBuffer ||
-    !Buffer.isBuffer(encryptedBuffer) ||
-    encryptedBuffer.length === 0
-  ) {
+const verifyDocumentIntegrityBuffer = (document, encryptedBuffer) => {
+  if (!encryptedBuffer || !Buffer.isBuffer(encryptedBuffer) || encryptedBuffer.length === 0) {
     return {
       valid: false,
       status: "missing",
@@ -208,15 +143,8 @@ const verifyDocumentIntegrityBuffer = (
   }
 };
 
-/* =====================================================
-   Legacy Local File Integrity Verification
-===================================================== */
-
 const verifyDocumentIntegrity = (document) => {
-  if (
-    !document.filepath ||
-    !fs.existsSync(document.filepath)
-  ) {
+  if (!document.filepath || !fs.existsSync(document.filepath)) {
     return {
       valid: false,
       status: "missing",
@@ -224,19 +152,10 @@ const verifyDocumentIntegrity = (document) => {
     };
   }
 
-  const encryptedBuffer = fs.readFileSync(
-    document.filepath
-  );
+  const encryptedBuffer = fs.readFileSync(document.filepath);
 
-  return verifyDocumentIntegrityBuffer(
-    document,
-    encryptedBuffer
-  );
+  return verifyDocumentIntegrityBuffer(document, encryptedBuffer);
 };
-
-/* =====================================================
-   Prompt Injection Detection
-===================================================== */
 
 const detectPromptInjection = (text = "") => {
   const rules = [
@@ -247,9 +166,7 @@ const detectPromptInjection = (text = "") => {
     /(send|upload|exfiltrate).{0,40}(secret|password|token|document)/i,
   ];
 
-  const matches = rules
-    .filter((rule) => rule.test(text))
-    .map((rule) => rule.source);
+  const matches = rules.filter((rule) => rule.test(text)).map((rule) => rule.source);
 
   return {
     detected: matches.length > 0,
@@ -257,10 +174,6 @@ const detectPromptInjection = (text = "") => {
     rules: matches,
   };
 };
-
-/* =====================================================
-   Trust Score
-===================================================== */
 
 const calculateTrustScore = ({
   integrityStatus = "pending",
@@ -270,39 +183,23 @@ const calculateTrustScore = ({
   sensitiveRisk = "safe",
 }) => {
   const dimensions = {
-    integrity:
-      integrityStatus === "verified"
-        ? 35
-        : integrityStatus === "pending"
-        ? 15
-        : 0,
+    integrity: integrityStatus === "verified" ? 35 : integrityStatus === "pending" ? 15 : 0,
 
-    confidentiality:
-      (encrypted ? 15 : 0) +
-      (ownerBound ? 10 : 0),
+    confidentiality: (encrypted ? 15 : 0) + (ownerBound ? 10 : 0),
 
     authentication: 20,
 
-    contentSafety:
-      (injectionDetected ? 0 : 12) +
-      (["safe", "low"].includes(sensitiveRisk)
-        ? 8
-        : 3),
+    contentSafety: (injectionDetected ? 0 : 12) + (["safe", "low"].includes(sensitiveRisk) ? 8 : 3),
   };
 
-  const score = Object.values(dimensions).reduce(
-    (sum, value) => sum + value,
-    0
-  );
+  const score = Object.values(dimensions).reduce((sum, value) => sum + value, 0);
 
   const grade =
-    score >= 85 &&
-    encrypted &&
-    integrityStatus === "verified"
+    score >= 85 && encrypted && integrityStatus === "verified"
       ? "trusted"
       : score >= 65
-      ? "review"
-      : "restricted";
+        ? "review"
+        : "restricted";
 
   return {
     score,

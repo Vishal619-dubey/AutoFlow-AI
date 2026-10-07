@@ -1,12 +1,6 @@
 const Activity = require("../models/Activity");
 
-exports.addActivity = async (
-  action,
-  fileName,
-  icon,
-  color,
-  uploadedBy
-) => {
+exports.addActivity = async (action, fileName, icon, color, uploadedBy) => {
   try {
     await Activity.create({
       action,

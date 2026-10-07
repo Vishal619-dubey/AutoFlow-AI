@@ -2,10 +2,34 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
-  Activity, ArrowUp, Bell, Bot, BrainCircuit, Camera, CheckCheck, CheckSquare,
-  ChevronDown, ChevronLeft, CornerDownLeft, FileStack, History, LayoutDashboard,
-  LogOut, Menu, Moon, Plus, Search, Settings, ShieldAlert, Sparkles, Sun, Trash2, Upload,
-  UserRound, Workflow, X,
+  Activity,
+  ArrowUp,
+  Bell,
+  Bot,
+  BrainCircuit,
+  Camera,
+  CheckCheck,
+  CheckSquare,
+  ChevronDown,
+  ChevronLeft,
+  CornerDownLeft,
+  FileStack,
+  History,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Moon,
+  Plus,
+  Search,
+  Settings,
+  ShieldAlert,
+  Sparkles,
+  Sun,
+  Trash2,
+  Upload,
+  UserRound,
+  Workflow,
+  X,
 } from "lucide-react";
 import API from "../services/api";
 
@@ -21,14 +45,70 @@ const navigation = [
 ];
 
 const quickCommands = [
-  { id: "upload", title: "Upload a document", subtitle: "Start intelligent processing", path: "/documents?upload=1", icon: Upload, keywords: "new pdf file import" },
-  { id: "automation", title: "Create an automation", subtitle: "Build a no-code document workflow", path: "/automations?create=1", icon: Plus, keywords: "rule workflow generate" },
-  { id: "copilot", title: "Ask AutoFlow Copilot", subtitle: "Chat with a processed PDF", path: "/assistant", icon: Bot, keywords: "ai chat question" },
-  { id: "dashboard", title: "Open Command Center", subtitle: "View workspace performance", path: "/dashboard", icon: LayoutDashboard, keywords: "home metrics" },
-  { id: "security", title: "Open Data Security", subtitle: "Review privacy and PII risks", path: "/security", icon: ShieldAlert, keywords: "scan aadhaar pan privacy" },
-  { id: "approvals", title: "Open Approval Queue", subtitle: "Resolve human review decisions", path: "/approvals", icon: CheckSquare, keywords: "review approve reject" },
-  { id: "audit", title: "Open Audit Trail", subtitle: "Inspect automation executions", path: "/audit", icon: History, keywords: "runs logs history" },
-  { id: "trash", title: "Open Trash", subtitle: "Restore or permanently delete files", path: "/trash", icon: Trash2, keywords: "deleted restore remove" },
+  {
+    id: "upload",
+    title: "Upload a document",
+    subtitle: "Start intelligent processing",
+    path: "/documents?upload=1",
+    icon: Upload,
+    keywords: "new pdf file import",
+  },
+  {
+    id: "automation",
+    title: "Create an automation",
+    subtitle: "Build a no-code document workflow",
+    path: "/automations?create=1",
+    icon: Plus,
+    keywords: "rule workflow generate",
+  },
+  {
+    id: "copilot",
+    title: "Ask AutoFlow Copilot",
+    subtitle: "Chat with a processed PDF",
+    path: "/assistant",
+    icon: Bot,
+    keywords: "ai chat question",
+  },
+  {
+    id: "dashboard",
+    title: "Open Command Center",
+    subtitle: "View workspace performance",
+    path: "/dashboard",
+    icon: LayoutDashboard,
+    keywords: "home metrics",
+  },
+  {
+    id: "security",
+    title: "Open Data Security",
+    subtitle: "Review privacy and PII risks",
+    path: "/security",
+    icon: ShieldAlert,
+    keywords: "scan aadhaar pan privacy",
+  },
+  {
+    id: "approvals",
+    title: "Open Approval Queue",
+    subtitle: "Resolve human review decisions",
+    path: "/approvals",
+    icon: CheckSquare,
+    keywords: "review approve reject",
+  },
+  {
+    id: "audit",
+    title: "Open Audit Trail",
+    subtitle: "Inspect automation executions",
+    path: "/audit",
+    icon: History,
+    keywords: "runs logs history",
+  },
+  {
+    id: "trash",
+    title: "Open Trash",
+    subtitle: "Restore or permanently delete files",
+    path: "/trash",
+    icon: Trash2,
+    keywords: "deleted restore remove",
+  },
 ];
 
 function optimizeProfilePhoto(file) {
@@ -71,8 +151,12 @@ export default function AutoFlowShell() {
   const [theme, setTheme] = useState(() => document.documentElement.dataset.theme || "dark");
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#f5f7fc" : "#070a12");
-    try { localStorage.setItem("autoflow_theme", theme); } catch { /* Theme still works when storage is unavailable. */ }
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", theme === "light" ? "#f5f7fc" : "#070a12");
+    try {
+      localStorage.setItem("autoflow_theme", theme);
+    } catch {} // eslint-disable-line no-empty
   }, [theme]);
   useEffect(() => {
     const syncTheme = (event) => {
@@ -88,7 +172,9 @@ export default function AutoFlowShell() {
   const [commandQuery, setCommandQuery] = useState("");
   const [commandDocuments, setCommandDocuments] = useState([]);
   const [activeCommand, setActiveCommand] = useState(0);
-  const [recentCommands, setRecentCommands] = useState(() => JSON.parse(localStorage.getItem("autoflow_recent_commands") || "[]"));
+  const [recentCommands, setRecentCommands] = useState(() =>
+    JSON.parse(localStorage.getItem("autoflow_recent_commands") || "[]"),
+  );
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [updatingPhoto, setUpdatingPhoto] = useState(false);
@@ -102,14 +188,18 @@ export default function AutoFlowShell() {
     setCommandOpen(true);
     setCommandQuery("");
     setActiveCommand(0);
-    API.get("/documents").then(({ data }) => setCommandDocuments(data)).catch(() => {});
+    API.get("/documents")
+      .then(({ data }) => setCommandDocuments(data))
+      .catch(() => {});
   };
 
   useEffect(() => {
-    API.get("/auth/profile").then(({ data }) => {
-      setUser(data.user);
-      localStorage.setItem("user", JSON.stringify(data.user));
-    }).catch(() => {});
+    API.get("/auth/profile")
+      .then(({ data }) => {
+        setUser(data.user);
+        localStorage.setItem("user", JSON.stringify(data.user));
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -120,7 +210,9 @@ export default function AutoFlowShell() {
           if (!open) {
             setCommandQuery("");
             setActiveCommand(0);
-            API.get("/documents").then(({ data }) => setCommandDocuments(data)).catch(() => {});
+            API.get("/documents")
+              .then(({ data }) => setCommandDocuments(data))
+              .catch(() => {});
           }
           return !open;
         });
@@ -133,14 +225,20 @@ export default function AutoFlowShell() {
 
   useEffect(() => {
     let active = true;
-    const refresh = () => API.get("/notifications").then(({ data }) => {
-      if (!active) return;
-      setNotifications(data.notifications);
-      setUnreadCount(data.unreadCount);
-    }).catch(() => {});
+    const refresh = () =>
+      API.get("/notifications")
+        .then(({ data }) => {
+          if (!active) return;
+          setNotifications(data.notifications);
+          setUnreadCount(data.unreadCount);
+        })
+        .catch(() => {});
     refresh();
     const timer = window.setInterval(refresh, 30000);
-    return () => { active = false; window.clearInterval(timer); };
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -177,7 +275,9 @@ export default function AutoFlowShell() {
   const openNotification = async (notification) => {
     if (!notification.read) {
       await API.put(`/notifications/${notification._id}/read`).catch(() => {});
-      setNotifications((items) => items.map((item) => item._id === notification._id ? { ...item, read: true } : item));
+      setNotifications((items) =>
+        items.map((item) => (item._id === notification._id ? { ...item, read: true } : item)),
+      );
       setUnreadCount((count) => Math.max(0, count - 1));
     }
     setNotificationOpen(false);
@@ -196,21 +296,56 @@ export default function AutoFlowShell() {
   };
 
   const notificationIcon = (type) => {
-    const icons = { upload: FileStack, review: CheckSquare, approval: CheckCheck, security: ShieldAlert, automation: Workflow, system: Sparkles };
+    const icons = {
+      upload: FileStack,
+      review: CheckSquare,
+      approval: CheckCheck,
+      security: ShieldAlert,
+      automation: Workflow,
+      system: Sparkles,
+    };
     return icons[type] || Bell;
   };
 
   const normalizedQuery = commandQuery.trim().toLowerCase();
-  const actionResults = quickCommands.filter((command) => !normalizedQuery || `${command.title} ${command.subtitle} ${command.keywords}`.toLowerCase().includes(normalizedQuery));
+  const actionResults = quickCommands.filter(
+    (command) =>
+      !normalizedQuery ||
+      `${command.title} ${command.subtitle} ${command.keywords}`
+        .toLowerCase()
+        .includes(normalizedQuery),
+  );
   const documentResults = commandDocuments
-    .filter((doc) => !normalizedQuery || `${doc.filename} ${doc.classification || ""} ${doc.category || ""}`.toLowerCase().includes(normalizedQuery))
+    .filter(
+      (doc) =>
+        !normalizedQuery ||
+        `${doc.filename} ${doc.classification || ""} ${doc.category || ""}`
+          .toLowerCase()
+          .includes(normalizedQuery),
+    )
     .slice(0, normalizedQuery ? 7 : 4)
-    .map((doc) => ({ id: `doc-${doc._id}`, title: doc.filename, subtitle: `${doc.classification || "General"} · ${doc.fileType?.toUpperCase()} · ${doc.priority} priority`, path: doc.fileType === "pdf" ? `/evidence/${doc._id}` : "/documents", icon: FileStack, document: true }));
-  const recentResults = !normalizedQuery ? recentCommands.slice(0, 3).map((item, index) => ({ ...item, id: `recent-${index}`, icon: History, recent: true })) : [];
-  const commandResults = normalizedQuery ? [...actionResults, ...documentResults] : [...recentResults, ...actionResults.slice(0, 5), ...documentResults];
+    .map((doc) => ({
+      id: `doc-${doc._id}`,
+      title: doc.filename,
+      subtitle: `${doc.classification || "General"} · ${doc.fileType?.toUpperCase()} · ${doc.priority} priority`,
+      path: doc.fileType === "pdf" ? `/evidence/${doc._id}` : "/documents",
+      icon: FileStack,
+      document: true,
+    }));
+  const recentResults = !normalizedQuery
+    ? recentCommands
+        .slice(0, 3)
+        .map((item, index) => ({ ...item, id: `recent-${index}`, icon: History, recent: true }))
+    : [];
+  const commandResults = normalizedQuery
+    ? [...actionResults, ...documentResults]
+    : [...recentResults, ...actionResults.slice(0, 5), ...documentResults];
 
   const runCommand = (command) => {
-    const recent = [{ title: command.title, subtitle: command.subtitle, path: command.path }, ...recentCommands.filter((item) => item.path !== command.path)].slice(0, 5);
+    const recent = [
+      { title: command.title, subtitle: command.subtitle, path: command.path },
+      ...recentCommands.filter((item) => item.path !== command.path),
+    ].slice(0, 5);
     setRecentCommands(recent);
     localStorage.setItem("autoflow_recent_commands", JSON.stringify(recent));
     setCommandOpen(false);
@@ -223,9 +358,22 @@ export default function AutoFlowShell() {
   };
 
   const commandKeyDown = (event) => {
-    if (event.key === "ArrowDown") { event.preventDefault(); setActiveCommand((index) => commandResults.length ? (index + 1) % commandResults.length : 0); }
-    if (event.key === "ArrowUp") { event.preventDefault(); setActiveCommand((index) => commandResults.length ? (index - 1 + commandResults.length) % commandResults.length : 0); }
-    if (event.key === "Enter" && commandResults[activeCommand]) { event.preventDefault(); runCommand(commandResults[activeCommand]); }
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveCommand((index) =>
+        commandResults.length ? (index + 1) % commandResults.length : 0,
+      );
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveCommand((index) =>
+        commandResults.length ? (index - 1 + commandResults.length) % commandResults.length : 0,
+      );
+    }
+    if (event.key === "Enter" && commandResults[activeCommand]) {
+      event.preventDefault();
+      runCommand(commandResults[activeCommand]);
+    }
     if (event.key === "Escape") setCommandOpen(false);
   };
 
@@ -233,7 +381,8 @@ export default function AutoFlowShell() {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!file.type.match(/^image\/(jpeg|png|webp)$/)) return toast.error("Choose a JPG, PNG or WEBP image");
+    if (!file.type.match(/^image\/(jpeg|png|webp)$/))
+      return toast.error("Choose a JPG, PNG or WEBP image");
     if (file.size > 8 * 1024 * 1024) return toast.error("Photo must be smaller than 8 MB");
     try {
       setUpdatingPhoto(true);
@@ -251,37 +400,321 @@ export default function AutoFlowShell() {
 
   return (
     <div className="flow-app">
-      {mobileOpen && <button className="flow-overlay" onClick={() => setMobileOpen(false)} aria-label="Close menu" />}
-      {commandOpen && <div className="flow-command-overlay" onMouseDown={() => setCommandOpen(false)}><section className="flow-command-dialog" role="dialog" aria-modal="true" aria-label="AutoFlow command palette" onMouseDown={(event) => event.stopPropagation()}><header><Search /><input autoFocus role="combobox" aria-expanded="true" aria-controls="flow-command-results" aria-activedescendant={commandResults[activeCommand]?.id} aria-keyshortcuts="Control+K Meta+K" value={commandQuery} onChange={(event) => { setCommandQuery(event.target.value); setActiveCommand(0); }} onKeyDown={commandKeyDown} placeholder="Search documents, pages or actions..." /><kbd>ESC</kbd></header><div className="flow-command-results" id="flow-command-results" role="listbox">{commandResults.map((command, index) => { const Icon = command.icon; return <button id={command.id} role="option" aria-selected={index === activeCommand} key={command.id} className={index === activeCommand ? "active" : ""} onMouseEnter={() => setActiveCommand(index)} onClick={() => runCommand(command)}><span className={`flow-command-icon ${command.document ? "document" : ""}`}><Icon /></span><span><b>{command.title}</b><small>{command.subtitle}</small></span>{command.recent && <em>RECENT</em>}<CornerDownLeft className="flow-command-enter" /></button>; })}{!commandResults.length && <div className="flow-command-empty"><Search /><b>No results found</b><span>Try a document name, page or workspace action.</span></div>}</div><footer><span><ArrowUp /> Navigate</span><span><CornerDownLeft /> Open</span><span><kbd>ESC</kbd> Close</span><b>AutoFlow Command Center</b></footer></section></div>}
+      {mobileOpen && (
+        <button
+          className="flow-overlay"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Close menu"
+        />
+      )}
+      {commandOpen && (
+        <div className="flow-command-overlay" onMouseDown={() => setCommandOpen(false)}>
+          <section
+            className="flow-command-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="AutoFlow command palette"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <header>
+              <Search />
+              <input
+                autoFocus
+                role="combobox"
+                aria-expanded="true"
+                aria-controls="flow-command-results"
+                aria-activedescendant={commandResults[activeCommand]?.id}
+                aria-keyshortcuts="Control+K Meta+K"
+                value={commandQuery}
+                onChange={(event) => {
+                  setCommandQuery(event.target.value);
+                  setActiveCommand(0);
+                }}
+                onKeyDown={commandKeyDown}
+                placeholder="Search documents, pages or actions..."
+              />
+              <kbd>ESC</kbd>
+            </header>
+            <div className="flow-command-results" id="flow-command-results" role="listbox">
+              {commandResults.map((command, index) => {
+                const Icon = command.icon;
+                return (
+                  <button
+                    id={command.id}
+                    role="option"
+                    aria-selected={index === activeCommand}
+                    key={command.id}
+                    className={index === activeCommand ? "active" : ""}
+                    onMouseEnter={() => setActiveCommand(index)}
+                    onClick={() => runCommand(command)}
+                  >
+                    <span className={`flow-command-icon ${command.document ? "document" : ""}`}>
+                      <Icon />
+                    </span>
+                    <span>
+                      <b>{command.title}</b>
+                      <small>{command.subtitle}</small>
+                    </span>
+                    {command.recent && <em>RECENT</em>}
+                    <CornerDownLeft className="flow-command-enter" />
+                  </button>
+                );
+              })}
+              {!commandResults.length && (
+                <div className="flow-command-empty">
+                  <Search />
+                  <b>No results found</b>
+                  <span>Try a document name, page or workspace action.</span>
+                </div>
+              )}
+            </div>
+            <footer>
+              <span>
+                <ArrowUp /> Navigate
+              </span>
+              <span>
+                <CornerDownLeft /> Open
+              </span>
+              <span>
+                <kbd>ESC</kbd> Close
+              </span>
+              <b>AutoFlow Command Center</b>
+            </footer>
+          </section>
+        </div>
+      )}
       <aside className={`flow-sidebar ${mobileOpen ? "is-open" : ""}`}>
         <div className="flow-brand">
-          <div className="flow-brand-mark"><BrainCircuit size={24} /></div>
-          <div><strong>AutoFlow AI</strong><span>Intelligent Operations</span></div>
-          <button className="flow-mobile-close" onClick={() => setMobileOpen(false)}><X size={20} /></button>
+          <div className="flow-brand-mark">
+            <BrainCircuit size={24} />
+          </div>
+          <div>
+            <strong>AutoFlow AI</strong>
+            <span>Intelligent Operations</span>
+          </div>
+          <button className="flow-mobile-close" onClick={() => setMobileOpen(false)}>
+            <X size={20} />
+          </button>
         </div>
-        <div className="flow-workspace"><span>VD</span><div><b>Vishal's Workspace</b><small>Automation Workspace</small></div><ChevronLeft size={16} /></div>
+        <div className="flow-workspace">
+          <span>VD</span>
+          <div>
+            <b>Vishal's Workspace</b>
+            <small>Automation Workspace</small>
+          </div>
+          <ChevronLeft size={16} />
+        </div>
         <nav className="flow-nav">
           <p>WORKSPACE</p>
           {navigation.map(([label, path, Icon]) => (
-            <NavLink key={path} to={path} onClick={() => setMobileOpen(false)} className={({ isActive }) => isActive ? "active" : ""}>
-              <Icon size={19} /><span>{label}</span>
+            <NavLink
+              key={path}
+              to={path}
+              onClick={() => setMobileOpen(false)}
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              <Icon size={19} />
+              <span>{label}</span>
             </NavLink>
           ))}
           <p>ACCOUNT</p>
-          <NavLink to="/settings"><Settings size={19} /><span>Settings</span></NavLink>
-          <NavLink to="/trash"><Trash2 size={19} /><span>Trash</span></NavLink>
+          <NavLink to="/settings">
+            <Settings size={19} />
+            <span>Settings</span>
+          </NavLink>
+          <NavLink to="/trash">
+            <Trash2 size={19} />
+            <span>Trash</span>
+          </NavLink>
         </nav>
-        <div className="flow-side-card"><Sparkles size={22} /><b>Automation health</b><span>All systems operational</span><div><i /></div><small>98% success rate</small></div>
-        <button className="flow-logout" onClick={logout}><LogOut size={18} /> Sign out</button>
+        <div className="flow-side-card">
+          <Sparkles size={22} />
+          <b>Automation health</b>
+          <span>All systems operational</span>
+          <div>
+            <i />
+          </div>
+          <small>98% success rate</small>
+        </div>
+        <button className="flow-logout" onClick={logout}>
+          <LogOut size={18} /> Sign out
+        </button>
       </aside>
 
       <section className="flow-main">
         <header className="flow-topbar">
-          <button className="flow-menu" onClick={() => setMobileOpen(true)}><Menu size={22} /></button>
-          <button className="flow-search" onClick={openCommandPalette} aria-keyshortcuts="Control+K Meta+K"><Search size={18} /><span>Search documents, workflows or actions...</span><kbd>Ctrl K</kbd></button>
-          <div className="flow-top-actions"><button type="button" className="flow-theme-toggle" role="switch" aria-checked={theme === "light"} aria-label="Light mode" title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}><Sun size={14} /><span className="flow-theme-track"><span className="flow-theme-thumb">{theme === "dark" ? <Moon size={12} /> : <Sun size={12} />}</span></span><Moon size={14} /></button><button className="flow-ai-pill" onClick={() => navigate("/assistant")}><Sparkles size={16} /> Ask AutoFlow</button><div className="flow-notifications" ref={notificationRef}><button className={`flow-notification-trigger ${notificationOpen ? "active" : ""}`} title="Notifications" onClick={() => { const next = !notificationOpen; setNotificationOpen(next); setProfileOpen(false); if (next) refreshNotifications(); }}><Bell />{unreadCount > 0 && <span>{unreadCount > 9 ? "9+" : unreadCount}</span>}</button>{notificationOpen && <div className="flow-notification-menu"><header><div><b>Notifications</b><span>{unreadCount ? `${unreadCount} unread updates` : "You're all caught up"}</span></div><button onClick={markAllRead} disabled={!unreadCount}><CheckCheck /> Mark all read</button></header><div className="flow-notification-list">{notifications.slice(0, 10).map((notification) => { const Icon = notificationIcon(notification.type); return <button key={notification._id} className={notification.read ? "read" : "unread"} onClick={() => openNotification(notification)}><div className={`flow-notification-icon ${notification.type}`}><Icon /></div><div><b>{notification.title}</b><p>{notification.message}</p><span>{relativeTime(notification.createdAt)}</span></div>{!notification.read && <i />}</button>; })}{!notifications.length && <div className="flow-notification-empty"><Bell /><b>No notifications yet</b><span>Important workspace events will appear here.</span></div>}</div><footer><ShieldAlert /> Live alerts for documents, privacy and automations</footer></div>}</div><div className="flow-profile" ref={profileRef}><input ref={photoInputRef} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={updatePhoto} /><button className={`flow-profile-trigger ${profileOpen ? "active" : ""}`} onClick={() => { setProfileOpen((open) => !open); setNotificationOpen(false); }}><div className="flow-avatar">{user.avatar ? <img src={user.avatar} alt={user.name || "Profile"} /> : (user.name || "VD").slice(0, 2).toUpperCase()}<i /></div><div className="flow-user"><b>{user.name || "Vishal Dubey"}</b><span>{user.role || "AI Automation Engineer"}</span></div><ChevronDown className="flow-profile-chevron" /></button>{profileOpen && <div className="flow-profile-menu"><div className="flow-profile-card"><div className="flow-profile-photo">{user.avatar ? <img src={user.avatar} alt="Profile" /> : (user.name || "VD").slice(0, 2).toUpperCase()}<span /></div><div><b>{user.name || "Vishal Dubey"}</b><span>{user.role || "AI Automation Engineer"}</span><small>{user.email}</small></div></div><div className="flow-profile-status"><i /> Available for intelligent operations</div><button onClick={() => photoInputRef.current?.click()} disabled={updatingPhoto}><Camera />{updatingPhoto ? "Optimizing photo..." : user.avatar ? "Change profile photo" : "Upload profile photo"}</button><button onClick={() => { setProfileOpen(false); navigate("/settings"); }}><UserRound /> My profile & settings</button><hr /><button className="danger" onClick={logout}><LogOut /> Sign out securely</button></div>}</div></div>
+          <button className="flow-menu" onClick={() => setMobileOpen(true)}>
+            <Menu size={22} />
+          </button>
+          <button
+            className="flow-search"
+            onClick={openCommandPalette}
+            aria-keyshortcuts="Control+K Meta+K"
+          >
+            <Search size={18} />
+            <span>Search documents, workflows or actions...</span>
+            <kbd>Ctrl K</kbd>
+          </button>
+          <div className="flow-top-actions">
+            <button
+              type="button"
+              className="flow-theme-toggle"
+              role="switch"
+              aria-checked={theme === "light"}
+              aria-label="Light mode"
+              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+            >
+              <Sun size={14} />
+              <span className="flow-theme-track">
+                <span className="flow-theme-thumb">
+                  {theme === "dark" ? <Moon size={12} /> : <Sun size={12} />}
+                </span>
+              </span>
+              <Moon size={14} />
+            </button>
+            <button className="flow-ai-pill" onClick={() => navigate("/assistant")}>
+              <Sparkles size={16} /> Ask AutoFlow
+            </button>
+            <div className="flow-notifications" ref={notificationRef}>
+              <button
+                className={`flow-notification-trigger ${notificationOpen ? "active" : ""}`}
+                title="Notifications"
+                onClick={() => {
+                  const next = !notificationOpen;
+                  setNotificationOpen(next);
+                  setProfileOpen(false);
+                  if (next) refreshNotifications();
+                }}
+              >
+                <Bell />
+                {unreadCount > 0 && <span>{unreadCount > 9 ? "9+" : unreadCount}</span>}
+              </button>
+              {notificationOpen && (
+                <div className="flow-notification-menu">
+                  <header>
+                    <div>
+                      <b>Notifications</b>
+                      <span>
+                        {unreadCount ? `${unreadCount} unread updates` : "You're all caught up"}
+                      </span>
+                    </div>
+                    <button onClick={markAllRead} disabled={!unreadCount}>
+                      <CheckCheck /> Mark all read
+                    </button>
+                  </header>
+                  <div className="flow-notification-list">
+                    {notifications.slice(0, 10).map((notification) => {
+                      const Icon = notificationIcon(notification.type);
+                      return (
+                        <button
+                          key={notification._id}
+                          className={notification.read ? "read" : "unread"}
+                          onClick={() => openNotification(notification)}
+                        >
+                          <div className={`flow-notification-icon ${notification.type}`}>
+                            <Icon />
+                          </div>
+                          <div>
+                            <b>{notification.title}</b>
+                            <p>{notification.message}</p>
+                            <span>{relativeTime(notification.createdAt)}</span>
+                          </div>
+                          {!notification.read && <i />}
+                        </button>
+                      );
+                    })}
+                    {!notifications.length && (
+                      <div className="flow-notification-empty">
+                        <Bell />
+                        <b>No notifications yet</b>
+                        <span>Important workspace events will appear here.</span>
+                      </div>
+                    )}
+                  </div>
+                  <footer>
+                    <ShieldAlert /> Live alerts for documents, privacy and automations
+                  </footer>
+                </div>
+              )}
+            </div>
+            <div className="flow-profile" ref={profileRef}>
+              <input
+                ref={photoInputRef}
+                hidden
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={updatePhoto}
+              />
+              <button
+                className={`flow-profile-trigger ${profileOpen ? "active" : ""}`}
+                onClick={() => {
+                  setProfileOpen((open) => !open);
+                  setNotificationOpen(false);
+                }}
+              >
+                <div className="flow-avatar">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.name || "Profile"} />
+                  ) : (
+                    (user.name || "VD").slice(0, 2).toUpperCase()
+                  )}
+                  <i />
+                </div>
+                <div className="flow-user">
+                  <b>{user.name || "Vishal Dubey"}</b>
+                  <span>{user.role || "AI Automation Engineer"}</span>
+                </div>
+                <ChevronDown className="flow-profile-chevron" />
+              </button>
+              {profileOpen && (
+                <div className="flow-profile-menu">
+                  <div className="flow-profile-card">
+                    <div className="flow-profile-photo">
+                      {user.avatar ? (
+                        <img src={user.avatar} alt="Profile" />
+                      ) : (
+                        (user.name || "VD").slice(0, 2).toUpperCase()
+                      )}
+                      <span />
+                    </div>
+                    <div>
+                      <b>{user.name || "Vishal Dubey"}</b>
+                      <span>{user.role || "AI Automation Engineer"}</span>
+                      <small>{user.email}</small>
+                    </div>
+                  </div>
+                  <div className="flow-profile-status">
+                    <i /> Available for intelligent operations
+                  </div>
+                  <button onClick={() => photoInputRef.current?.click()} disabled={updatingPhoto}>
+                    <Camera />
+                    {updatingPhoto
+                      ? "Optimizing photo..."
+                      : user.avatar
+                        ? "Change profile photo"
+                        : "Upload profile photo"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setProfileOpen(false);
+                      navigate("/settings");
+                    }}
+                  >
+                    <UserRound /> My profile & settings
+                  </button>
+                  <hr />
+                  <button className="danger" onClick={logout}>
+                    <LogOut /> Sign out securely
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </header>
-        <main className="flow-content"><Outlet /></main>
+        <main className="flow-content">
+          <Outlet />
+        </main>
       </section>
     </div>
   );

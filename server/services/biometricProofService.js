@@ -10,15 +10,9 @@ function getSecret() {
   return process.env.JWT_SECRET;
 }
 
-function createBiometricProof({
-  userId,
-  documentId,
-  faceVersion = 1,
-}) {
+function createBiometricProof({ userId, documentId, faceVersion = 1 }) {
   if (!userId || !documentId) {
-    throw new Error(
-      "User ID and document ID are required for BioTrust proof"
-    );
+    throw new Error("User ID and document ID are required for BioTrust proof");
   }
 
   const token = jwt.sign(
@@ -35,7 +29,7 @@ function createBiometricProof({
       issuer: "autoflow-ai",
       audience: "autoflow-biotrust",
       expiresIn: BIOMETRIC_PROOF_TTL_SECONDS,
-    }
+    },
   );
 
   return {
@@ -44,12 +38,7 @@ function createBiometricProof({
   };
 }
 
-function verifyBiometricProof({
-  token,
-  userId,
-  documentId,
-  faceVersion = 1,
-}) {
+function verifyBiometricProof({ token, userId, documentId, faceVersion = 1 }) {
   if (!token) {
     return {
       valid: false,
@@ -58,20 +47,13 @@ function verifyBiometricProof({
   }
 
   try {
-    const payload = jwt.verify(
-      token,
-      getSecret(),
-      {
-        algorithms: ["HS256"],
-        issuer: "autoflow-ai",
-        audience: "autoflow-biotrust",
-      }
-    );
+    const payload = jwt.verify(token, getSecret(), {
+      algorithms: ["HS256"],
+      issuer: "autoflow-ai",
+      audience: "autoflow-biotrust",
+    });
 
-    if (
-      payload.purpose !== "biotrust-step-up" ||
-      payload.action !== "download"
-    ) {
+    if (payload.purpose !== "biotrust-step-up" || payload.action !== "download") {
       return {
         valid: false,
         reason: "invalid_scope",
@@ -85,20 +67,14 @@ function verifyBiometricProof({
       };
     }
 
-    if (
-      payload.documentId !==
-      String(documentId)
-    ) {
+    if (payload.documentId !== String(documentId)) {
       return {
         valid: false,
         reason: "wrong_document",
       };
     }
 
-    if (
-      Number(payload.faceVersion) !==
-      Number(faceVersion || 1)
-    ) {
+    if (Number(payload.faceVersion) !== Number(faceVersion || 1)) {
       return {
         valid: false,
         reason: "stale_face_enrollment",
@@ -112,10 +88,7 @@ function verifyBiometricProof({
   } catch (error) {
     return {
       valid: false,
-      reason:
-        error.name === "TokenExpiredError"
-          ? "expired"
-          : "invalid",
+      reason: error.name === "TokenExpiredError" ? "expired" : "invalid",
     };
   }
 }

@@ -2,36 +2,32 @@ const mongoose = require("mongoose");
 
 const documentSchema = new mongoose.Schema(
   {
-    /* ==========================
-       Basic Information
-    ========================== */
-
     filename: {
       type: String,
       required: true,
     },
 
     filepath: {
-  type: String,
-  default: "",
-},
+      type: String,
+      default: "",
+    },
 
-storageProvider: {
-  type: String,
-  enum: ["local", "s3"],
-  default: "local",
-},
+    storageProvider: {
+      type: String,
+      enum: ["local", "s3"],
+      default: "local",
+    },
 
-s3Key: {
-  type: String,
-  default: "",
-},
+    s3Key: {
+      type: String,
+      default: "",
+    },
 
-storageStatus: {
-  type: String,
-  enum: ["available", "missing"],
-  default: "available",
-},
+    storageStatus: {
+      type: String,
+      enum: ["available", "missing"],
+      default: "available",
+    },
 
     filesize: {
       type: Number,
@@ -45,17 +41,7 @@ storageStatus: {
 
     fileType: {
       type: String,
-      enum: [
-        "pdf",
-        "image",
-        "audio",
-        "video",
-        "docx",
-        "xlsx",
-        "pptx",
-        "txt",
-        "other",
-      ],
+      enum: ["pdf", "image", "audio", "video", "docx", "xlsx", "pptx", "txt", "other"],
       default: "other",
     },
 
@@ -64,10 +50,6 @@ storageStatus: {
       ref: "User",
       default: null,
     },
-
-    /* ==========================
-       AI Data
-    ========================== */
 
     content: {
       type: String,
@@ -80,9 +62,9 @@ storageStatus: {
     },
 
     knowledgeGraph: {
-  type: Array,
-  default: [],
-},
+      type: Array,
+      default: [],
+    },
 
     language: {
       type: String,
@@ -98,10 +80,6 @@ storageStatus: {
       type: Boolean,
       default: false,
     },
-
-    /* ==========================
-       Organization
-    ========================== */
 
     category: {
       type: String,
@@ -173,10 +151,6 @@ storageStatus: {
       }),
     },
 
-    /* ==========================
-       Media Information
-    ========================== */
-
     thumbnail: {
       type: String,
       default: "",
@@ -197,10 +171,6 @@ storageStatus: {
       default: "",
     },
 
-    /* ==========================
-       Status
-    ========================== */
-
     favorite: {
       type: Boolean,
       default: false,
@@ -220,10 +190,6 @@ storageStatus: {
       type: Boolean,
       default: false,
     },
-
-    /* ==========================
-       Analytics
-    ========================== */
 
     views: {
       type: Number,
@@ -252,7 +218,7 @@ storageStatus: {
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Document", documentSchema);
